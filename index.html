@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Sparkbox — Party Games Beyond Reality</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div class="nebula nebula-1" aria-hidden="true"></div>
+  <div class="nebula nebula-2" aria-hidden="true"></div>
+  <div class="nebula nebula-3" aria-hidden="true"></div>
+
+  <div id="app">
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <header class="hero">
+        <h1 class="logo">Sparkbox</h1>
+        <p class="tagline">Party games from another dimension</p>
+      </header>
+
+      <div class="game-grid">
+        <button class="game-card" data-game="spyplay">
+          <span class="game-icon">🕵️</span>
+          <span class="game-name">SpyPlay</span>
+          <span class="game-desc">Find the spy among you</span>
+        </button>
+        <button class="game-card" data-game="mafia">
+          <span class="game-icon">🌙</span>
+          <span class="game-name">Mafia</span>
+          <span class="game-desc">Trust no one at night</span>
+        </button>
+        <button class="game-card" data-game="callit">
+          <span class="game-icon">⚡</span>
+          <span class="game-name">Call It</span>
+          <span class="game-desc">Say it before time runs out</span>
+        </button>
+      </div>
+
+      <footer class="home-footer">
+        <p>Pass the device · Play together · No accounts needed</p>
+      </footer>
+    </section>
+
+    <!-- GAME SCREENS (injected by JS) -->
+    <section id="screen-game" class="screen"></section>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

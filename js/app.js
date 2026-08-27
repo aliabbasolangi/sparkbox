@@ -2,47 +2,6 @@ import { createSpyPlay } from './games/spyplay.js';
 import { createMafia } from './games/mafia.js';
 import { createCallIt } from './games/callit.js';
 
-/* ─── Starfield ─── */
-function initStarfield() {
-  const canvas = document.getElementById('starfield');
-  const ctx = canvas.getContext('2d');
-  let stars = [];
-  let w, h;
-
-  function resize() {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
-    const count = Math.floor((w * h) / 3500);
-    stars = Array.from({ length: count }, () => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() * 1.5 + 0.3,
-      speed: Math.random() * 0.3 + 0.05,
-      opacity: Math.random() * 0.7 + 0.3,
-      twinkle: Math.random() * Math.PI * 2,
-    }));
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, w, h);
-    const t = Date.now() * 0.001;
-    for (const s of stars) {
-      s.y += s.speed;
-      if (s.y > h) { s.y = 0; s.x = Math.random() * w; }
-      const flicker = 0.5 + 0.5 * Math.sin(t * 2 + s.twinkle);
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(200, 220, 255, ${s.opacity * flicker})`;
-      ctx.fill();
-    }
-    requestAnimationFrame(draw);
-  }
-
-  resize();
-  window.addEventListener('resize', resize);
-  draw();
-}
-
 /* ─── Shared UI helpers ─── */
 let timerInterval = null;
 
@@ -133,8 +92,6 @@ function launchGame(gameId) {
 }
 
 /* ─── Init ─── */
-initStarfield();
-
 document.querySelectorAll('.game-card').forEach(card => {
   card.addEventListener('click', () => launchGame(card.dataset.game));
 });

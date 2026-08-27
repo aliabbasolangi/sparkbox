@@ -3,26 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Sparkbox — Party Games Beyond Reality</title>
+  <title>Sparkbox — Party Games</title>
+  <link rel="icon" href="images/logo.jpg" type="image/jpeg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9172610701690985"
     crossorigin="anonymous"></script>
 </head>
 <body>
-  <canvas id="starfield" aria-hidden="true"></canvas>
-  <div class="nebula nebula-1" aria-hidden="true"></div>
-  <div class="nebula nebula-2" aria-hidden="true"></div>
-  <div class="nebula nebula-3" aria-hidden="true"></div>
+  <div class="bg-shapes" aria-hidden="true">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+  </div>
 
   <div id="app">
-    <!-- HOME -->
     <section id="screen-home" class="screen active">
       <header class="hero">
-        <h1 class="logo">Sparkbox</h1>
-        <p class="tagline">Party games from another dimension</p>
+        <img class="logo-img" src="images/logo.jpg" alt="spark box" width="220" height="220">
+        <p class="tagline">Pass-and-play party games</p>
       </header>
 
       <div class="game-grid">
@@ -48,7 +49,6 @@
       </footer>
     </section>
 
-    <!-- GAME SCREENS (injected by JS) -->
     <section id="screen-game" class="screen"></section>
   </div>
 

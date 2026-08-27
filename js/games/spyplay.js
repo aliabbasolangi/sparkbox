@@ -1,4 +1,4 @@
-import { LOCATIONS } from '../data/locations.js';
+import { SCENE_PACKS, getLocationsForPack } from '../data/locations.js';
 
 function shuffle(arr) {
   const a = [...arr];
@@ -44,6 +44,7 @@ export function createSpyfall(container, { goHome, ui }) {
     state.playerCount = state.playerCount || 4;
     state.timerMinutes = state.timerMinutes || 5;
     state.rolesEnabled = state.rolesEnabled !== false;
+    state.scenePackId = state.scenePackId || SCENE_PACKS[0].id;
     state.playerNames = state.playerNames || Array.from({ length: state.playerCount }, (_, i) => `Player ${i + 1}`);
 
     container.innerHTML = `
@@ -79,6 +80,15 @@ export function createSpyfall(container, { goHome, ui }) {
               <span class="chip ${state.timerMinutes === m ? 'active' : ''}" data-minutes="${m}">${m} min</span>
             `).join('')}
           </div>
+        </div>
+        <div class="form-group">
+          <label>Scene pack</label>
+          <div class="chip-group">
+            ${SCENE_PACKS.map(pack => `
+              <span class="chip ${state.scenePackId === pack.id ? 'active' : ''}" data-pack="${pack.id}">${pack.name}</span>
+            `).join('')}
+          </div>
+          <p class="helper-text">${getLocationsForPack(state.scenePackId).length} locations in this pack.</p>
         </div>
         <div class="form-group">
           <label>Location roles</label>
@@ -125,6 +135,12 @@ export function createSpyfall(container, { goHome, ui }) {
         renderSetup();
       });
     });
+    container.querySelectorAll('[data-pack]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        state.scenePackId = chip.dataset.pack;
+        renderSetup();
+      });
+    });
     container.querySelectorAll('[data-roles]').forEach(chip => {
       chip.addEventListener('click', () => {
         state.rolesEnabled = chip.dataset.roles === 'on';
@@ -148,7 +164,8 @@ export function createSpyfall(container, { goHome, ui }) {
   }
 
   function startGame() {
-    const location = pickRandom(LOCATIONS);
+    const pool = getLocationsForPack(state.scenePackId);
+    const location = pickRandom(pool);
     const spyIndex = Math.floor(Math.random() * state.playerCount);
 
     state.location = location;

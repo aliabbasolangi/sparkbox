@@ -17,35 +17,54 @@
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
     <div class="shape shape-3"></div>
+    <span class="float-emoji float-1">🎉</span>
+    <span class="float-emoji float-2">🎲</span>
+    <span class="float-emoji float-3">✨</span>
+    <span class="float-emoji float-4">🎭</span>
   </div>
 
   <div id="app">
     <section id="screen-home" class="screen active">
       <header class="hero">
-        <img class="logo-img" src="images/logo.jpg" alt="spark box" width="220" height="220">
-        <p class="tagline">Pass-and-play party games</p>
+        <p class="hero-badge">🎉 pass &amp; play</p>
+        <h1 class="wordmark">
+          <span class="wordmark-top">spark</span>
+          <span class="wordmark-bottom">box</span>
+        </h1>
+        <p class="tagline">One phone. Your whole crew. Pick a game.</p>
       </header>
 
+      <p class="section-label">Tonight's lineup</p>
+
       <div class="game-grid">
-        <button class="game-card" data-game="spyplay">
-          <span class="game-icon">🕵️</span>
-          <span class="game-name">SpyPlay</span>
-          <span class="game-desc">Find the spy among you</span>
+        <button class="game-card game-card--spy" data-game="spyplay">
+          <span class="game-card-icon">🕵️</span>
+          <span class="game-card-body">
+            <span class="game-name">SpyPlay</span>
+            <span class="game-desc">Who's the spy? Ask questions, find the imposter.</span>
+          </span>
+          <span class="game-card-go" aria-hidden="true">→</span>
         </button>
-        <button class="game-card" data-game="mafia">
-          <span class="game-icon">🌙</span>
-          <span class="game-name">Mafia</span>
-          <span class="game-desc">Trust no one at night</span>
+        <button class="game-card game-card--mafia" data-game="mafia">
+          <span class="game-card-icon">🌙</span>
+          <span class="game-card-body">
+            <span class="game-name">Mafia</span>
+            <span class="game-desc">Lie, bluff, and survive the night.</span>
+          </span>
+          <span class="game-card-go" aria-hidden="true">→</span>
         </button>
-        <button class="game-card" data-game="callit">
-          <span class="game-icon">⚡</span>
-          <span class="game-name">Call It</span>
-          <span class="game-desc">Say it before time runs out</span>
+        <button class="game-card game-card--callit" data-game="callit">
+          <span class="game-card-icon">⚡</span>
+          <span class="game-card-body">
+            <span class="game-name">Call It</span>
+            <span class="game-desc">Describe fast — shout the answer first.</span>
+          </span>
+          <span class="game-card-go" aria-hidden="true">→</span>
         </button>
       </div>
 
       <footer class="home-footer">
-        <p>Pass the device · Play together · No accounts needed</p>
+        <p>No accounts · No setup · Just pass the phone</p>
       </footer>
     </section>
 

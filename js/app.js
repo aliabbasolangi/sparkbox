@@ -1,4 +1,4 @@
-import { createSpyPlay } from './games/spyplay.js';
+import { createSpyfall } from './games/spyplay.js';
 import { createMafia } from './games/mafia.js';
 import { createCallIt } from './games/callit.js';
 
@@ -85,7 +85,7 @@ function launchGame(gameId) {
   activeCleanup = () => gameScreen.removeEventListener('click', handleBack);
 
   switch (gameId) {
-    case 'spyplay': createSpyPlay(gameScreen, ctx); break;
+    case 'spyplay': createSpyfall(gameScreen, ctx); break;
     case 'mafia': createMafia(gameScreen, ctx); break;
     case 'callit': createCallIt(gameScreen, ctx); break;
   }

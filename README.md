@@ -1,6 +1,6 @@
 # Sparkbox
 
-Pass-and-play party games: **SpyPlay**, **Mafia**, and **Call It**.
+Pass-and-play party games: **Spyfall**, **Mafia**, and **Call It**.
 
 Static HTML, CSS, and JavaScript — no build step required.
 

@@ -357,8 +357,7 @@ body {
   font-weight: 700;
   min-width: 3rem;
   text-align: center;
-  color: var(--white);
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.12);
+  color: var(--ink);
 }
 
 select, input[type="text"] {

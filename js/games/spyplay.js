@@ -28,7 +28,7 @@ function assignInnocentRoles(location, count, spyIndex) {
   return assigned;
 }
 
-export function createSpyPlay(container, { goHome, ui }) {
+export function createSpyfall(container, { goHome, ui }) {
   let state = { phase: 'setup' };
 
   function render() {
@@ -47,7 +47,7 @@ export function createSpyPlay(container, { goHome, ui }) {
     state.playerNames = state.playerNames || Array.from({ length: state.playerCount }, (_, i) => `Player ${i + 1}`);
 
     container.innerHTML = `
-      ${ui.header('SpyPlay', goHome)}
+      ${ui.header('Spyfall', goHome)}
       <div class="panel">
         <h2>How to play</h2>
         <ul>
@@ -167,7 +167,7 @@ export function createSpyPlay(container, { goHome, ui }) {
 
     if (!state.revealed) {
       container.innerHTML = `
-        ${ui.header('SpyPlay', goHome)}
+        ${ui.header('Spyfall', goHome)}
         <div class="pass-screen">
           <p class="pass-label">Pass the device to</p>
           <p class="pass-player">${name}</p>
@@ -186,7 +186,7 @@ export function createSpyPlay(container, { goHome, ui }) {
       const isSpy = state.currentPlayer === state.spyIndex;
       const role = state.playerRoles[state.currentPlayer];
       container.innerHTML = `
-        ${ui.header('SpyPlay', goHome)}
+        ${ui.header('Spyfall', goHome)}
         <div class="pass-screen">
           <p class="pass-label">${name}'s role</p>
           <div class="reveal-card ${isSpy ? 'spy' : 'innocent'}">
@@ -222,7 +222,7 @@ export function createSpyPlay(container, { goHome, ui }) {
 
   function renderDiscuss() {
     container.innerHTML = `
-      ${ui.header('SpyPlay', goHome)}
+      ${ui.header('Spyfall', goHome)}
       <div class="phase-banner discuss">Discussion</div>
       <div class="panel">
         <p>Ask each other questions about the location. Accuse, debate, and vote in person — the app won't track that.</p>
@@ -239,7 +239,7 @@ export function createSpyPlay(container, { goHome, ui }) {
     const spyName = state.playerNames[state.spyIndex];
 
     container.innerHTML = `
-      ${ui.header('SpyPlay', goHome)}
+      ${ui.header('Spyfall', goHome)}
       <div class="result-box">
         <p class="result-title">The reveal</p>
         <p class="result-sub">

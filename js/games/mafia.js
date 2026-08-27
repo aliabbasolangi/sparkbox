@@ -30,34 +30,18 @@ function assignRoles(count, mafiaCount, doctorOn, grandfatherOn) {
   return shuffle(roles);
 }
 
-function buildDawnStory({ target, saved, victim, round }) {
+function buildDawnStory({ victim, round }) {
   if (victim) {
-    if (saved && saved !== target) {
-      return pickRandom([
-        `Night ${round}: the Mafia crept up on <strong>${target}</strong>, but the Doctor was with <strong>${saved}</strong> instead. By dawn, <strong>${victim}</strong> was gone.`,
-        `Killers chose <strong>${target}</strong>. The Doctor watched <strong>${saved}</strong> — too late for <strong>${victim}</strong>.`,
-      ]);
-    }
     return pickRandom([
-      `Under cover of darkness, the Mafia silenced <strong>${victim}</strong>. Nobody could stop it.`,
-      `<strong>${victim}</strong> didn't survive the night. The Mafia had their way.`,
-    ]);
-  }
-  if (target && saved === target) {
-    return pickRandom([
-      `The Mafia went for <strong>${target}</strong> — but the Doctor saved them in the nick of time.`,
-      `An attack on <strong>${target}</strong> failed. The Doctor got there first.`,
-    ]);
-  }
-  if (saved) {
-    return pickRandom([
-      `The Doctor kept watch over <strong>${saved}</strong>. No attack came... this time.`,
-      `A quiet night. The Doctor never left <strong>${saved}</strong>'s side.`,
+      `Night ${round}: when the sun rose, <strong>${victim}</strong> was found dead.`,
+      `Dawn broke over a quieter town — <strong>${victim}</strong> didn't make it through the night.`,
+      `Someone didn't wake up. <strong>${victim}</strong> was killed while the town slept.`,
     ]);
   }
   return pickRandom([
-    `Everyone survived the night — but the Mafia are still among you.`,
-    `Dawn broke peacefully. Don't let it fool you.`,
+    `Everyone survived the night. The Mafia are still hiding among you.`,
+    `No one was killed. A peaceful dawn — but don't drop your guard.`,
+    `The town awoke intact. Who can you really trust?`,
   ]);
 }
 
@@ -342,19 +326,56 @@ export function createMafia(container, { goHome, ui }) {
     const player = order[state.nightPlayerIndex];
 
     if (player.role === 'Civilian') {
+      if (state.nightSubPhase !== 'civilian-idle') {
+        container.innerHTML = `
+          ${ui.header('Mafia', goHome)}
+          <div class="phase-banner night">Night ${state.round}</div>
+          <div class="pass-screen">
+            <p class="pass-label">Pass the device to</p>
+            <p class="pass-player">${player.name}</p>
+            <div class="pass-hidden" data-action="continue">
+              <div class="tap-icon">🌙</div>
+              <p>Tap when you have the phone</p>
+            </div>
+          </div>
+        `;
+        container.querySelector('[data-action="continue"]')?.addEventListener('click', () => {
+          state.nightSubPhase = 'civilian-idle';
+          renderNightAction();
+        });
+      } else {
+        container.innerHTML = `
+          ${ui.header('Mafia', goHome)}
+          <div class="phase-banner night">Night ${state.round}</div>
+          <div class="pass-screen" style="min-height:auto">
+            <p class="pass-label">${player.name}</p>
+            <div class="panel" style="width:100%;text-align:center">
+              <p class="reveal-detail" style="font-size:1.05rem;color:var(--ink)">Nothing for you to do tonight. Keep your eyes closed, stay quiet, and try to find the Mafia when day breaks.</p>
+            </div>
+            <button class="btn btn-primary" data-action="pass-on">Pass the phone</button>
+          </div>
+        `;
+        container.querySelector('[data-action="pass-on"]')?.addEventListener('click', advanceNightTurn);
+      }
+      return;
+    }
+
+    if (state.nightSubPhase === 'grandfather-result' && state.grandfatherInspect) {
+      const { name, alignment } = state.grandfatherInspect;
       container.innerHTML = `
         ${ui.header('Mafia', goHome)}
         <div class="phase-banner night">Night ${state.round}</div>
-        <div class="pass-screen">
-          <p class="pass-label">Pass the device to</p>
-          <p class="pass-player">${player.name}</p>
-          <div class="pass-hidden" data-action="continue">
-            <div class="tap-icon">🌙</div>
-            <p>Tap when you have the phone</p>
-          </div>
+        <div class="panel panel-private">
+          <h2>For your eyes only</h2>
+          <p style="font-size:1.1rem;line-height:1.6"><strong>${name}</strong> is a <strong>${alignment}</strong>.</p>
+          <p class="helper-text">Don't show this to anyone. Pass the phone when ready.</p>
         </div>
+        <button class="btn btn-primary" data-action="gf-done">Pass the phone</button>
       `;
-      container.querySelector('[data-action="continue"]')?.addEventListener('click', advanceNightTurn);
+      container.querySelector('[data-action="gf-done"]')?.addEventListener('click', () => {
+        state.grandfatherInspect = null;
+        finishSpecialTurn();
+      });
       return;
     }
 
@@ -435,11 +456,12 @@ export function createMafia(container, { goHome, ui }) {
       container.querySelectorAll('[data-target]').forEach(el => {
         el.addEventListener('click', () => {
           const target = state.players.find(p => p.name === el.dataset.target);
-          state.nightActions.grandfatherResult = {
+          state.grandfatherInspect = {
             name: target.name,
             alignment: getAlignment(target.role),
           };
-          finishSpecialTurn();
+          state.nightSubPhase = 'grandfather-result';
+          renderNightAction();
         });
       });
     }
@@ -455,7 +477,7 @@ export function createMafia(container, { goHome, ui }) {
     } else {
       state.lastVictim = null;
     }
-    state.dawnStory = buildDawnStory({ target, saved, victim: state.lastVictim, round: state.round });
+    state.dawnStory = buildDawnStory({ victim: state.lastVictim, round: state.round });
   }
 
   function renderNightResult() {
@@ -467,12 +489,6 @@ export function createMafia(container, { goHome, ui }) {
         <h2>Morning news</h2>
         <p>${state.dawnStory}</p>
       </div>
-      ${state.nightActions.grandfatherResult ? `
-        <div class="panel panel-private">
-          <h2>Grandfather result (private)</h2>
-          <p>Show only to the Grandfather: <strong>${state.nightActions.grandfatherResult.name}</strong> is a <strong>${state.nightActions.grandfatherResult.alignment}</strong>.</p>
-        </div>
-      ` : ''}
       <button class="btn btn-primary" data-action="continue">${win ? 'See final results' : 'Start day discussion'}</button>
     `;
     container.querySelector('[data-action="continue"]')?.addEventListener('click', () => {

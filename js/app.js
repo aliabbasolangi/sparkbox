@@ -1,6 +1,7 @@
 import { createSpyfall } from './games/spyplay.js';
 import { createMafia } from './games/mafia.js';
 import { createCallIt } from './games/callit.js';
+import { createImpostor } from './games/impostor.js';
 
 /* ─── Shared UI helpers ─── */
 let timerInterval = null;
@@ -88,6 +89,7 @@ function launchGame(gameId) {
     case 'spyplay': createSpyfall(gameScreen, ctx); break;
     case 'mafia': createMafia(gameScreen, ctx); break;
     case 'callit': createCallIt(gameScreen, ctx); break;
+    case 'impostor': createImpostor(gameScreen, ctx); break;
   }
 }
 

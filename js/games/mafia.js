@@ -11,72 +11,61 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function getAlignment(role) {
+  return role === 'Mafia' ? 'Mafia' : 'Civilian';
+}
+
+function minPlayers(mafiaCount, doctorOn, grandfatherOn) {
+  const specials = (doctorOn ? 1 : 0) + (grandfatherOn ? 1 : 0);
+  const minTown = mafiaCount + 1;
+  return mafiaCount + specials + minTown;
+}
+
+function assignRoles(count, mafiaCount, doctorOn, grandfatherOn) {
+  const roles = [];
+  for (let i = 0; i < mafiaCount; i++) roles.push('Mafia');
+  if (doctorOn) roles.push('Doctor');
+  if (grandfatherOn) roles.push('Grandfather');
+  while (roles.length < count) roles.push('Civilian');
+  return shuffle(roles);
+}
+
 function buildDawnStory({ target, saved, victim, round }) {
   if (victim) {
     if (saved && saved !== target) {
       return pickRandom([
-        `Night ${round} brought terror to the town. The Mafia crept up on <strong>${target}</strong>, blades ready—but the Doctor had stayed with <strong>${saved}</strong> instead. By dawn, <strong>${victim}</strong> was gone, and the streets were filled with whispers.`,
-        `While the town slept, killers closed in on <strong>${target}</strong>. The Doctor watched over <strong>${saved}</strong> through the long hours, but couldn't reach everyone. When the sun rose, they found <strong>${victim}</strong> had been taken in the night.`,
-        `Footsteps in the alley. A muffled struggle. The Mafia had chosen <strong>${target}</strong>, and this time nothing stopped them. <strong>${victim}</strong> didn't make it to see the morning.`,
+        `Night ${round}: the Mafia crept up on <strong>${target}</strong>, but the Doctor was with <strong>${saved}</strong> instead. By dawn, <strong>${victim}</strong> was gone.`,
+        `Killers chose <strong>${target}</strong>. The Doctor watched <strong>${saved}</strong> — too late for <strong>${victim}</strong>.`,
       ]);
     }
     return pickRandom([
-      `In the dead of night, the Mafia slipped through the shadows toward <strong>${victim}</strong>. No one came to their aid. At dawn, the town woke to the worst kind of silence.`,
-      `They never stood a chance. Under cover of darkness, the killers found <strong>${victim}</strong> alone—and when morning broke, another name was added to the town's grim ledger.`,
-      `The night belonged to the Mafia. <strong>${victim}</strong> was hunted, cornered, and eliminated before the first rooster crowed.`,
+      `Under cover of darkness, the Mafia silenced <strong>${victim}</strong>. Nobody could stop it.`,
+      `<strong>${victim}</strong> didn't survive the night. The Mafia had their way.`,
     ]);
   }
-
   if (target && saved === target) {
     return pickRandom([
-      `Night ${round}: the Mafia crept up on <strong>${target}</strong> and tried to eliminate them—but the Doctor was there in the nick of time. <strong>${target}</strong> stumbled into the daylight, shaken but alive.`,
-      `Killers had <strong>${target}</strong> in their sights, moving silently through the dark. Just as all seemed lost, the Doctor burst in. <strong>${target}</strong> lives to tell the tale... for now.`,
-      `Whispers, then footsteps. The Mafia reached <strong>${target}</strong>'s door—but the Doctor had already arrived. The save came in the final heartbeat before dawn.`,
+      `The Mafia went for <strong>${target}</strong> — but the Doctor saved them in the nick of time.`,
+      `An attack on <strong>${target}</strong> failed. The Doctor got there first.`,
     ]);
   }
-
   if (saved) {
     return pickRandom([
-      `The Doctor kept a lonely vigil over <strong>${saved}</strong> all night. No attack came this time, but every shadow still felt like a threat come morning.`,
-      `Through the long hours of darkness, the Doctor never left <strong>${saved}</strong>'s side. The town awoke intact—though nobody could say for how long.`,
+      `The Doctor kept watch over <strong>${saved}</strong>. No attack came... this time.`,
+      `A quiet night. The Doctor never left <strong>${saved}</strong>'s side.`,
     ]);
   }
-
   return pickRandom([
-    `An uneasy quiet hung over the town. The Mafia couldn't agree on a target—or chose to wait. When morning came, every soul was still accounted for... though no one slept easy.`,
-    `Night ${round} passed without bloodshed. Still, eyes darted across the breakfast table. The killers are here. They're just biding their time.`,
-    `Dawn broke on a town holding its breath. No one fell last night—but the Mafia are still out there, somewhere in the crowd.`,
+    `Everyone survived the night — but the Mafia are still among you.`,
+    `Dawn broke peacefully. Don't let it fool you.`,
   ]);
 }
 
 function buildDayStory(votedOut, role) {
   return pickRandom([
-    `The town had heard enough. After a fierce debate, they turned on <strong>${votedOut}</strong>—and when the verdict came down, the truth spilled out: they were the <strong>${role}</strong>.`,
-    `Accusations flew until only one name remained. <strong>${votedOut}</strong> was cast out, their mask finally removed. They were the <strong>${role}</strong> all along.`,
-    `By vote, the town chose <strong>${votedOut}</strong>. As the crowd dispersed, their role was revealed for all to see: <strong>${role}</strong>.`,
+    `The town voted out <strong>${votedOut}</strong> — they were the <strong>${role}</strong>.`,
+    `<strong>${votedOut}</strong> was eliminated. Their role: <strong>${role}</strong>.`,
   ]);
-}
-
-const ROLE_CONFIG = {
-  4:  { mafia: 1, doctor: 0, detective: 1 },
-  5:  { mafia: 1, doctor: 1, detective: 0 },
-  6:  { mafia: 1, doctor: 1, detective: 1 },
-  7:  { mafia: 2, doctor: 1, detective: 1 },
-  8:  { mafia: 2, doctor: 1, detective: 1 },
-  9:  { mafia: 2, doctor: 1, detective: 1 },
-  10: { mafia: 3, doctor: 1, detective: 1 },
-  11: { mafia: 3, doctor: 1, detective: 1 },
-  12: { mafia: 3, doctor: 1, detective: 2 },
-};
-
-function assignRoles(count) {
-  const cfg = ROLE_CONFIG[Math.min(Math.max(count, 4), 12)];
-  const roles = [];
-  for (let i = 0; i < cfg.mafia; i++) roles.push('Mafia');
-  for (let i = 0; i < cfg.doctor; i++) roles.push('Doctor');
-  for (let i = 0; i < cfg.detective; i++) roles.push('Detective');
-  while (roles.length < count) roles.push('Civilian');
-  return shuffle(roles);
 }
 
 export function createMafia(container, { goHome, ui }) {
@@ -104,37 +93,61 @@ export function createMafia(container, { goHome, ui }) {
     return state.players.filter(p => p.alive && p.role === 'Mafia');
   }
 
-  function civiliansAlive() {
+  function nonMafiaAlive() {
     return state.players.filter(p => p.alive && p.role !== 'Mafia');
   }
 
   function checkWin() {
     const m = mafiaAlive().length;
-    const c = civiliansAlive().length;
+    const t = nonMafiaAlive().length;
     if (m === 0) return 'civilians';
-    if (m >= c) return 'mafia';
+    if (m >= t) return 'mafia';
     return null;
   }
 
+  function getMinPlayers() {
+    return minPlayers(state.mafiaCount, state.doctorEnabled, state.grandfatherEnabled);
+  }
+
   function renderSetup() {
-    state.playerCount = state.playerCount || 6;
+    state.mafiaCount = state.mafiaCount ?? 1;
+    state.doctorEnabled = state.doctorEnabled !== false;
+    state.grandfatherEnabled = state.grandfatherEnabled !== false;
+    state.playerCount = state.playerCount ?? Math.max(6, getMinPlayers());
     state.playerNames = state.playerNames || Array.from({ length: state.playerCount }, (_, i) => `Player ${i + 1}`);
+    const minP = getMinPlayers();
 
     container.innerHTML = `
       ${ui.header('Mafia', goHome)}
       <div class="panel">
-        <h2>How to Play</h2>
+        <h2>How to play</h2>
         <ul>
-          <li><strong>Mafia</strong> eliminate civilians at night</li>
-          <li><strong>Doctor</strong> saves one person each night</li>
-          <li><strong>Detective</strong> investigates one person each night</li>
-          <li>Daytime: discuss and vote someone out. Civilians win when all Mafia are gone.</li>
+          <li><strong>Mafia</strong> — kill one person each night. Win when Mafia ≥ everyone else alive.</li>
+          <li><strong>Civilian</strong> — no powers. Sus, debate, vote out the Mafia.</li>
+          <li><strong>Doctor</strong> — save one person each night (blind). Self-save only once. Saving Mafia does nothing.</li>
+          <li><strong>Grandfather</strong> — check if someone is Civilian or Mafia (not their special role).</li>
         </ul>
       </div>
       <div class="panel">
-        <h2>Players</h2>
+        <h2>Setup</h2>
         <div class="form-group">
-          <label>Number of players (4–12)</label>
+          <label>Mafia count</label>
+          <div class="chip-group">
+            ${[1, 2, 3].map(n => `
+              <span class="chip ${state.mafiaCount === n ? 'active' : ''}" data-mafia="${n}">${n} Mafia</span>
+            `).join('')}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Special roles</label>
+          <div class="chip-group">
+            <span class="chip ${state.doctorEnabled ? 'active' : ''}" data-toggle="doctor">Doctor</span>
+            <span class="chip ${state.grandfatherEnabled ? 'active' : ''}" data-toggle="grandfather">Grandfather</span>
+          </div>
+          <p class="helper-text">Minimum ${minP} players with current settings.</p>
+        </div>
+        <div class="form-group">
+          <label>Players (${minP}–12)</label>
           <div class="form-row">
             <button class="btn-stepper" data-action="dec">−</button>
             <span class="stepper-value">${state.playerCount}</span>
@@ -142,34 +155,69 @@ export function createMafia(container, { goHome, ui }) {
           </div>
         </div>
         <div class="form-group">
-          <label>Player names</label>
+          <label>Names</label>
           ${state.playerNames.map((name, i) => `
             <input type="text" data-player="${i}" value="${name}" style="margin-bottom:0.5rem">
           `).join('')}
         </div>
       </div>
-      <button class="btn btn-primary" data-action="start">Begin the Night</button>
+      <button class="btn btn-primary" data-action="start" ${state.playerCount < minP ? 'disabled style="opacity:0.5"' : ''}>Begin the night</button>
     `;
 
+    container.querySelectorAll('[data-mafia]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        state.mafiaCount = +chip.dataset.mafia;
+        if (state.playerCount < getMinPlayers()) state.playerCount = getMinPlayers();
+        while (state.playerNames.length < state.playerCount) {
+          state.playerNames.push(`Player ${state.playerNames.length + 1}`);
+        }
+        renderSetup();
+      });
+    });
+    container.querySelectorAll('[data-toggle]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const key = chip.dataset.toggle;
+        if (key === 'doctor') state.doctorEnabled = !state.doctorEnabled;
+        if (key === 'grandfather') state.grandfatherEnabled = !state.grandfatherEnabled;
+        if (!state.doctorEnabled && !state.grandfatherEnabled && state.mafiaCount >= 2 && state.playerCount < getMinPlayers()) {
+          state.playerCount = getMinPlayers();
+        }
+        if (state.playerCount < getMinPlayers()) state.playerCount = getMinPlayers();
+        renderSetup();
+      });
+    });
     container.querySelector('[data-action="dec"]')?.addEventListener('click', () => {
-      if (state.playerCount > 4) { state.playerCount--; state.playerNames = state.playerNames.slice(0, state.playerCount); renderSetup(); }
+      if (state.playerCount > minP) {
+        state.playerCount--;
+        state.playerNames = state.playerNames.slice(0, state.playerCount);
+        renderSetup();
+      }
     });
     container.querySelector('[data-action="inc"]')?.addEventListener('click', () => {
       if (state.playerCount < 12) {
         state.playerCount++;
-        while (state.playerNames.length < state.playerCount) state.playerNames.push(`Player ${state.playerNames.length + 1}`);
+        while (state.playerNames.length < state.playerCount) {
+          state.playerNames.push(`Player ${state.playerNames.length + 1}`);
+        }
         renderSetup();
       }
     });
     container.querySelectorAll('[data-player]').forEach(input => {
       input.addEventListener('input', e => { state.playerNames[+e.target.dataset.player] = e.target.value; });
     });
-    container.querySelector('[data-action="start"]')?.addEventListener('click', startGame);
+    container.querySelector('[data-action="start"]')?.addEventListener('click', () => {
+      if (state.playerCount >= minP) startGame();
+    });
   }
 
   function startGame() {
-    const roles = assignRoles(state.playerCount);
-    state.players = state.playerNames.map((name, i) => ({ name, role: roles[i], alive: true }));
+    const roles = assignRoles(state.playerCount, state.mafiaCount, state.doctorEnabled, state.grandfatherEnabled);
+    state.players = state.playerNames.map((name, i) => ({
+      name,
+      role: roles[i],
+      alive: true,
+      doctorSelfSaved: false,
+    }));
     state.round = 1;
     state.currentPlayer = 0;
     state.revealed = false;
@@ -185,22 +233,21 @@ export function createMafia(container, { goHome, ui }) {
 
   function roleDescription(role) {
     const desc = {
-      Mafia: 'Eliminate civilians at night. Don\'t get caught during the day. If multiple Mafia, you know each other.',
-      Doctor: 'Each night, choose someone to protect from elimination.',
-      Detective: 'Each night, investigate one player — you\'ll learn if they are Mafia or not.',
-      Civilian: 'Find and vote out the Mafia during the day. You have no night power.',
+      Mafia: 'Kill one person each night with the other Mafia. Win when Mafia equals or outnumber everyone else.',
+      Civilian: 'No night powers. Sus people out, survive, and vote to eliminate the Mafia.',
+      Doctor: 'Each night, blindly save one person. You don\'t know who Mafia targets. Self-save only once — saving Mafia has no effect.',
+      Grandfather: 'Each night, inspect one player. You learn only if they are Civilian or Mafia — not Doctor or other roles.',
     };
     return desc[role];
   }
 
   function roleLabel(role) {
-    const labels = {
+    return {
       Mafia: '🔪 Mafia',
-      Doctor: '💊 Doctor',
-      Detective: '🔍 Detective',
       Civilian: '🏘️ Civilian',
-    };
-    return labels[role];
+      Doctor: '💊 Doctor',
+      Grandfather: '👴 Grandfather',
+    }[role];
   }
 
   function renderReveal() {
@@ -220,11 +267,10 @@ export function createMafia(container, { goHome, ui }) {
       `;
       container.querySelector('[data-action="reveal"]')?.addEventListener('click', () => { state.revealed = true; renderReveal(); });
     } else {
-      const mafiaPartners = state.players.filter(p => p.role === 'Mafia' && p.name !== player.name).map(p => p.name);
-      let extra = '';
-      if (player.role === 'Mafia' && mafiaPartners.length) {
-        extra = `<p class="reveal-detail" style="margin-top:0.75rem">Your partners: <strong>${mafiaPartners.join(', ')}</strong></p>`;
-      }
+      const partners = state.players.filter(p => p.role === 'Mafia' && p.name !== player.name).map(p => p.name);
+      const extra = player.role === 'Mafia' && partners.length
+        ? `<p class="reveal-detail" style="margin-top:0.75rem">Your partners: <strong>${partners.join(', ')}</strong></p>`
+        : '';
 
       container.innerHTML = `
         ${ui.header('Mafia', goHome)}
@@ -236,7 +282,7 @@ export function createMafia(container, { goHome, ui }) {
             ${extra}
           </div>
           <button class="btn btn-primary" data-action="next">
-            ${state.currentPlayer < state.players.length - 1 ? 'Pass to Next Player' : 'Begin Night 1'}
+            ${state.currentPlayer < state.players.length - 1 ? 'Pass to next player' : 'Begin night 1'}
           </button>
         </div>
       `;
@@ -246,7 +292,6 @@ export function createMafia(container, { goHome, ui }) {
           state.revealed = false;
           renderReveal();
         } else {
-          state.nightActions = {};
           state.phase = 'night-intro';
           render();
         }
@@ -257,6 +302,7 @@ export function createMafia(container, { goHome, ui }) {
   function startNightRound() {
     state.nightActions = {};
     state.nightPlayerIndex = 0;
+    state.nightSubPhase = undefined;
     state.phase = 'night-action';
     render();
   }
@@ -266,7 +312,7 @@ export function createMafia(container, { goHome, ui }) {
       ${ui.header('Mafia', goHome)}
       <div class="phase-banner night">Night ${state.round}</div>
       <div class="panel">
-        <p>Everyone close your eyes. The phone will go around — pass it to each player when it's their turn.</p>
+        <p>Everyone close your eyes. Pass the phone to each player in turn — same as role reveal.</p>
       </div>
       <button class="btn btn-primary" data-action="start-night">Begin</button>
     `;
@@ -275,7 +321,13 @@ export function createMafia(container, { goHome, ui }) {
 
   function advanceNightTurn() {
     state.nightPlayerIndex++;
+    state.nightSubPhase = undefined;
     renderNightAction();
+  }
+
+  function finishSpecialTurn() {
+    state.nightSubPhase = undefined;
+    advanceNightTurn();
   }
 
   function renderNightAction() {
@@ -331,13 +383,10 @@ export function createMafia(container, { goHome, ui }) {
       container.innerHTML = `
         ${ui.header('Mafia', goHome)}
         <div class="phase-banner night">Night ${state.round}</div>
-        <div class="panel">
-          <p>Choose someone.</p>
-        </div>
+        <div class="panel"><p>Choose someone to eliminate tonight.</p></div>
         <ul class="player-list">
           ${targets.map(p => `<li class="player-item" data-target="${p.name}">${p.name}</li>`).join('')}
         </ul>
-        <button class="btn btn-secondary" data-action="skip">Skip</button>
       `;
       container.querySelectorAll('[data-target]').forEach(el => {
         el.addEventListener('click', () => {
@@ -345,31 +394,38 @@ export function createMafia(container, { goHome, ui }) {
           finishSpecialTurn();
         });
       });
-      container.querySelector('[data-action="skip"]')?.addEventListener('click', finishSpecialTurn);
     } else if (player.role === 'Doctor') {
+      const selfNote = player.doctorSelfSaved
+        ? 'You already used your one self-save.'
+        : 'You may save yourself once per game.';
+      const targets = alivePlayers().filter(p => {
+        if (p.name === player.name && player.doctorSelfSaved) return false;
+        return true;
+      });
       container.innerHTML = `
         ${ui.header('Mafia', goHome)}
         <div class="phase-banner night">Night ${state.round}</div>
         <div class="panel">
-          <p>Choose someone to protect.</p>
+          <p>Blind save — pick someone to protect. You don't know who Mafia is targeting.</p>
+          <p class="helper-text">${selfNote} Saving a Mafia member has no effect.</p>
         </div>
         <ul class="player-list">
-          ${alivePlayers().map(p => `<li class="player-item" data-target="${p.name}">${p.name}</li>`).join('')}
+          ${targets.map(p => `<li class="player-item" data-target="${p.name}">${p.name}${p.name === player.name ? ' (you)' : ''}</li>`).join('')}
         </ul>
       `;
       container.querySelectorAll('[data-target]').forEach(el => {
         el.addEventListener('click', () => {
-          state.nightActions.doctor = el.dataset.target;
+          const targetName = el.dataset.target;
+          if (targetName === player.name) player.doctorSelfSaved = true;
+          state.nightActions.doctor = targetName;
           finishSpecialTurn();
         });
       });
-    } else if (player.role === 'Detective') {
+    } else if (player.role === 'Grandfather') {
       container.innerHTML = `
         ${ui.header('Mafia', goHome)}
         <div class="phase-banner night">Night ${state.round}</div>
-        <div class="panel">
-          <p>Choose someone to investigate.</p>
-        </div>
+        <div class="panel"><p>Inspect one player — you'll learn if they are <strong>Civilian</strong> or <strong>Mafia</strong> only.</p></div>
         <ul class="player-list">
           ${alivePlayers().filter(p => p.name !== player.name).map(p => `
             <li class="player-item" data-target="${p.name}">${p.name}</li>
@@ -379,19 +435,14 @@ export function createMafia(container, { goHome, ui }) {
       container.querySelectorAll('[data-target]').forEach(el => {
         el.addEventListener('click', () => {
           const target = state.players.find(p => p.name === el.dataset.target);
-          state.nightActions.detectiveResult = {
+          state.nightActions.grandfatherResult = {
             name: target.name,
-            isMafia: target.role === 'Mafia',
+            alignment: getAlignment(target.role),
           };
           finishSpecialTurn();
         });
       });
     }
-  }
-
-  function finishSpecialTurn() {
-    state.nightSubPhase = undefined;
-    advanceNightTurn();
   }
 
   function resolveNight() {
@@ -404,17 +455,11 @@ export function createMafia(container, { goHome, ui }) {
     } else {
       state.lastVictim = null;
     }
-    state.dawnStory = buildDawnStory({
-      target,
-      saved,
-      victim: state.lastVictim,
-      round: state.round,
-    });
+    state.dawnStory = buildDawnStory({ target, saved, victim: state.lastVictim, round: state.round });
   }
 
   function renderNightResult() {
     const win = checkWin();
-
     container.innerHTML = `
       ${ui.header('Mafia', goHome)}
       <div class="phase-banner night">Dawn breaks</div>
@@ -422,10 +467,10 @@ export function createMafia(container, { goHome, ui }) {
         <h2>Morning news</h2>
         <p>${state.dawnStory}</p>
       </div>
-      ${state.nightActions.detectiveResult ? `
+      ${state.nightActions.grandfatherResult ? `
         <div class="panel panel-private">
-          <h2>Detective result (private)</h2>
-          <p>Show this only to the Detective: <strong>${state.nightActions.detectiveResult.name}</strong> is ${state.nightActions.detectiveResult.isMafia ? 'Mafia' : 'not Mafia'}.</p>
+          <h2>Grandfather result (private)</h2>
+          <p>Show only to the Grandfather: <strong>${state.nightActions.grandfatherResult.name}</strong> is a <strong>${state.nightActions.grandfatherResult.alignment}</strong>.</p>
         </div>
       ` : ''}
       <button class="btn btn-primary" data-action="continue">${win ? 'See final results' : 'Start day discussion'}</button>
@@ -464,7 +509,7 @@ export function createMafia(container, { goHome, ui }) {
     container.innerHTML = `
       ${ui.header('Mafia', goHome)}
       <div class="phase-banner day">Vote to eliminate</div>
-      <div class="panel"><p>Discuss and agree on one person to vote out.</p></div>
+      <div class="panel"><p>Discuss and vote out one person.</p></div>
       <ul class="player-list">
         ${alivePlayers().map(p => `<li class="player-item" data-vote="${p.name}">${p.name}</li>`).join('')}
       </ul>
@@ -482,14 +527,12 @@ export function createMafia(container, { goHome, ui }) {
     const player = state.players.find(p => p.name === state.votedOut);
     player.alive = false;
     const win = checkWin();
-
     if (win) {
       state.winner = win;
       state.phase = 'result';
       render();
       return;
     }
-
     container.innerHTML = `
       ${ui.header('Mafia', goHome)}
       <div class="phase-banner day">Town verdict</div>
@@ -501,8 +544,6 @@ export function createMafia(container, { goHome, ui }) {
     `;
     container.querySelector('[data-action="next-night"]')?.addEventListener('click', () => {
       state.round++;
-      state.nightPlayerIndex = 0;
-      state.nightSubPhase = undefined;
       state.phase = 'night-intro';
       render();
     });
@@ -514,7 +555,7 @@ export function createMafia(container, { goHome, ui }) {
       ${ui.header('Mafia', goHome)}
       <div class="result-box">
         <p class="result-title">${civiliansWon ? 'Civilians win!' : 'Mafia wins!'}</p>
-        <p class="result-sub">${civiliansWon ? 'All Mafia have been eliminated.' : 'The Mafia now outnumber the civilians.'}</p>
+        <p class="result-sub">${civiliansWon ? 'All Mafia eliminated.' : 'Mafia equal or outnumber the town.'}</p>
       </div>
       <div class="panel">
         <h2>Final roles</h2>

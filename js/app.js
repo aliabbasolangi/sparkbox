@@ -2,6 +2,7 @@ import { createSpyfall } from './games/spyplay.js';
 import { createMafia } from './games/mafia.js';
 import { createCallIt } from './games/callit.js';
 import { createImpostor } from './games/impostor.js';
+import { createWaveLength } from './games/wavelength.js';
 
 /* ─── Shared UI helpers ─── */
 let timerInterval = null;
@@ -81,7 +82,7 @@ function launchGame(gameId) {
 
   gameScreen.addEventListener('click', handleBack);
   function handleBack(e) {
-    if (e.target.closest('[data-action="back"]')) goHome();
+    if (e.target.closest('.btn-back')) goHome();
   }
   activeCleanup = () => gameScreen.removeEventListener('click', handleBack);
 
@@ -90,6 +91,7 @@ function launchGame(gameId) {
     case 'mafia': createMafia(gameScreen, ctx); break;
     case 'callit': createCallIt(gameScreen, ctx); break;
     case 'impostor': createImpostor(gameScreen, ctx); break;
+    case 'wavelength': createWaveLength(gameScreen, ctx); break;
   }
 }
 

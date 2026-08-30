@@ -52,7 +52,7 @@ function buildDayStory(votedOut, role) {
   ]);
 }
 
-export function createMafia(container, { goHome, ui }) {
+export function createMafia(container, { goHome, ui, roster }) {
   let state = { phase: 'setup' };
 
   function render() {
@@ -97,9 +97,16 @@ export function createMafia(container, { goHome, ui }) {
     state.mafiaCount = state.mafiaCount ?? 1;
     state.doctorEnabled = state.doctorEnabled !== false;
     state.grandfatherEnabled = state.grandfatherEnabled !== false;
-    state.playerCount = state.playerCount ?? Math.max(6, getMinPlayers());
-    state.playerNames = state.playerNames || Array.from({ length: state.playerCount }, (_, i) => `Player ${i + 1}`);
     const minP = getMinPlayers();
+    if (!state.playerNames) {
+      const loaded = roster.loadPlayers({ defaultCount: Math.max(6, minP), min: minP, max: 12 });
+      state.playerCount = loaded.playerCount;
+      state.playerNames = loaded.playerNames;
+    }
+    if (state.playerCount < minP) {
+      state.playerCount = minP;
+      state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
+    }
 
     container.innerHTML = `
       ${ui.header('Mafia', goHome)}
@@ -141,7 +148,7 @@ export function createMafia(container, { goHome, ui }) {
         <div class="form-group">
           <label>Names</label>
           ${state.playerNames.map((name, i) => `
-            <input type="text" data-player="${i}" value="${name}" style="margin-bottom:0.5rem">
+            <input type="text" data-player="${i}" value="${name}" placeholder="Name" autocomplete="off" style="margin-bottom:0.5rem">
           `).join('')}
         </div>
       </div>
@@ -152,9 +159,7 @@ export function createMafia(container, { goHome, ui }) {
       chip.addEventListener('click', () => {
         state.mafiaCount = +chip.dataset.mafia;
         if (state.playerCount < getMinPlayers()) state.playerCount = getMinPlayers();
-        while (state.playerNames.length < state.playerCount) {
-          state.playerNames.push(`Player ${state.playerNames.length + 1}`);
-        }
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         renderSetup();
       });
     });
@@ -167,27 +172,29 @@ export function createMafia(container, { goHome, ui }) {
           state.playerCount = getMinPlayers();
         }
         if (state.playerCount < getMinPlayers()) state.playerCount = getMinPlayers();
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         renderSetup();
       });
     });
     container.querySelector('[data-action="dec"]')?.addEventListener('click', () => {
       if (state.playerCount > minP) {
         state.playerCount--;
-        state.playerNames = state.playerNames.slice(0, state.playerCount);
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         renderSetup();
       }
     });
     container.querySelector('[data-action="inc"]')?.addEventListener('click', () => {
       if (state.playerCount < 12) {
         state.playerCount++;
-        while (state.playerNames.length < state.playerCount) {
-          state.playerNames.push(`Player ${state.playerNames.length + 1}`);
-        }
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         renderSetup();
       }
     });
     container.querySelectorAll('[data-player]').forEach(input => {
-      input.addEventListener('input', e => { state.playerNames[+e.target.dataset.player] = e.target.value; });
+      input.addEventListener('input', e => {
+        state.playerNames[+e.target.dataset.player] = e.target.value;
+        roster.savePlayers(state.playerNames);
+      });
     });
     container.querySelector('[data-action="start"]')?.addEventListener('click', () => {
       if (state.playerCount >= minP) startGame();
@@ -196,8 +203,9 @@ export function createMafia(container, { goHome, ui }) {
 
   function startGame() {
     const roles = assignRoles(state.playerCount, state.mafiaCount, state.doctorEnabled, state.grandfatherEnabled);
+    roster.savePlayers(state.playerNames);
     state.players = state.playerNames.map((name, i) => ({
-      name,
+      name: roster.label(name, i),
       role: roles[i],
       alive: true,
       doctorSelfSaved: false,

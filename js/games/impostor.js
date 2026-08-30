@@ -13,8 +13,12 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function createImpostor(container, { goHome, ui }) {
+export function createImpostor(container, { goHome, ui, roster }) {
   let state = { phase: 'setup' };
+
+  function playerName(i) {
+    return roster.label(state.playerNames[i], i);
+  }
 
   function render() {
     switch (state.phase) {
@@ -26,11 +30,15 @@ export function createImpostor(container, { goHome, ui }) {
   }
 
   function renderSetup() {
+    if (!state.playerNames) {
+      const loaded = roster.loadPlayers({ defaultCount: 4, min: 3, max: 12 });
+      state.playerCount = loaded.playerCount;
+      state.playerNames = loaded.playerNames;
+    }
     state.playerCount = state.playerCount || 4;
     state.timerMinutes = state.timerMinutes || 5;
     state.selectedGenres = state.selectedGenres?.filter(id => IMPOSTOR_GENRES.some(g => g.id === id))
       ?? IMPOSTOR_GENRES.map(g => g.id);
-    state.playerNames = state.playerNames || Array.from({ length: state.playerCount }, (_, i) => `Player ${i + 1}`);
 
     container.innerHTML = `
       ${ui.header('Impostor', goHome)}
@@ -55,7 +63,7 @@ export function createImpostor(container, { goHome, ui }) {
         <div class="form-group">
           <label>Names</label>
           ${state.playerNames.map((name, i) => `
-            <input type="text" data-player="${i}" value="${name}" style="margin-bottom:0.5rem">
+            <input type="text" data-player="${i}" value="${name}" placeholder="Name" autocomplete="off" style="margin-bottom:0.5rem">
           `).join('')}
         </div>
         <div class="form-group">
@@ -81,22 +89,21 @@ export function createImpostor(container, { goHome, ui }) {
     container.querySelector('[data-action="dec"]')?.addEventListener('click', () => {
       if (state.playerCount > 3) {
         state.playerCount--;
-        state.playerNames = state.playerNames.slice(0, state.playerCount);
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         renderSetup();
       }
     });
     container.querySelector('[data-action="inc"]')?.addEventListener('click', () => {
       if (state.playerCount < 12) {
         state.playerCount++;
-        while (state.playerNames.length < state.playerCount) {
-          state.playerNames.push(`Player ${state.playerNames.length + 1}`);
-        }
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         renderSetup();
       }
     });
     container.querySelectorAll('[data-player]').forEach(input => {
       input.addEventListener('input', e => {
-        state.playerNames[+e.target.dataset.player] = e.target.value || `Player ${+e.target.dataset.player + 1}`;
+        state.playerNames[+e.target.dataset.player] = e.target.value;
+        roster.savePlayers(state.playerNames);
       });
     });
     container.querySelectorAll('[data-genre]').forEach(chip => {
@@ -116,6 +123,7 @@ export function createImpostor(container, { goHome, ui }) {
   }
 
   function startGame() {
+    roster.savePlayers(state.playerNames);
     const pool = buildWordPool(state.selectedGenres);
     state.wordEntry = pickRandom(pool.length ? pool : buildWordPool(IMPOSTOR_GENRES.map(g => g.id)));
     state.impostorIndex = Math.floor(Math.random() * state.playerCount);
@@ -126,7 +134,7 @@ export function createImpostor(container, { goHome, ui }) {
   }
 
   function renderReveal() {
-    const name = state.playerNames[state.currentPlayer];
+    const name = playerName(state.currentPlayer);
     const isImpostor = state.currentPlayer === state.impostorIndex;
 
     if (!state.revealed) {
@@ -200,7 +208,7 @@ export function createImpostor(container, { goHome, ui }) {
   }
 
   function renderResult() {
-    const impostorName = state.playerNames[state.impostorIndex];
+    const impostorName = playerName(state.impostorIndex);
     container.innerHTML = `
       ${ui.header('Impostor', goHome)}
       <div class="result-box">

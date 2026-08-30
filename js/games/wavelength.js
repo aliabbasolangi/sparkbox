@@ -28,8 +28,12 @@ function closenessCopy(diff) {
   return { title: 'Way off', sub: `Off by ${diff}. Different planet.` };
 }
 
-export function createWaveLength(container, { goHome, ui }) {
+export function createWaveLength(container, { goHome, ui, roster }) {
   let state = { phase: 'setup' };
+
+  function playerName(i) {
+    return roster.label(state.playerNames[i], i);
+  }
 
   function render() {
     switch (state.phase) {
@@ -44,8 +48,12 @@ export function createWaveLength(container, { goHome, ui }) {
   }
 
   function renderSetup() {
+    if (!state.playerNames) {
+      const loaded = roster.loadPlayers({ defaultCount: 4, min: 3, max: 12 });
+      state.playerCount = loaded.playerCount;
+      state.playerNames = loaded.playerNames;
+    }
     state.playerCount = state.playerCount || 4;
-    state.playerNames = state.playerNames || Array.from({ length: state.playerCount }, (_, i) => `Player ${i + 1}`);
     state.sitOutMode = state.sitOutMode || 'random';
     if (state.sitOutPick == null) state.sitOutPick = 0;
 
@@ -74,7 +82,7 @@ export function createWaveLength(container, { goHome, ui }) {
         <div class="form-group">
           <label>Player names</label>
           ${state.playerNames.map((name, i) => `
-            <input type="text" data-player="${i}" value="${name}" placeholder="Player ${i + 1}" style="margin-bottom:0.5rem">
+            <input type="text" data-player="${i}" value="${name}" placeholder="Name" autocomplete="off" style="margin-bottom:0.5rem">
           `).join('')}
         </div>
         <div class="form-group">
@@ -82,7 +90,7 @@ export function createWaveLength(container, { goHome, ui }) {
           <div class="chip-group">
             <span class="chip ${state.sitOutMode === 'random' ? 'active' : ''}" data-sitout="random">Random</span>
             ${state.playerNames.map((name, i) => `
-              <span class="chip ${state.sitOutMode === 'pick' && state.sitOutPick === i ? 'active' : ''}" data-sitout="pick" data-index="${i}">${name}</span>
+              <span class="chip ${state.sitOutMode === 'pick' && state.sitOutPick === i ? 'active' : ''}" data-sitout="pick" data-index="${i}">${roster.label(name, i)}</span>
             `).join('')}
           </div>
         </div>
@@ -97,7 +105,7 @@ export function createWaveLength(container, { goHome, ui }) {
     container.querySelector('[data-action="dec-players"]')?.addEventListener('click', () => {
       if (state.playerCount > 3) {
         state.playerCount--;
-        state.playerNames = state.playerNames.slice(0, state.playerCount);
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         if (state.sitOutPick >= state.playerCount) state.sitOutPick = 0;
         renderSetup();
       }
@@ -105,15 +113,14 @@ export function createWaveLength(container, { goHome, ui }) {
     container.querySelector('[data-action="inc-players"]')?.addEventListener('click', () => {
       if (state.playerCount < 12) {
         state.playerCount++;
-        while (state.playerNames.length < state.playerCount) {
-          state.playerNames.push(`Player ${state.playerNames.length + 1}`);
-        }
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         renderSetup();
       }
     });
     container.querySelectorAll('[data-player]').forEach(input => {
       input.addEventListener('input', e => {
-        state.playerNames[+e.target.dataset.player] = e.target.value || `Player ${+e.target.dataset.player + 1}`;
+        state.playerNames[+e.target.dataset.player] = e.target.value;
+        roster.savePlayers(state.playerNames);
       });
     });
     container.querySelectorAll('[data-sitout]').forEach(chip => {
@@ -131,6 +138,7 @@ export function createWaveLength(container, { goHome, ui }) {
   }
 
   function startRound() {
+    roster.savePlayers(state.playerNames);
     state.sitOutIndex = state.sitOutMode === 'pick'
       ? state.sitOutPick
       : Math.floor(Math.random() * state.playerCount);
@@ -142,11 +150,13 @@ export function createWaveLength(container, { goHome, ui }) {
   }
 
   function sitOutName() {
-    return state.playerNames[state.sitOutIndex];
+    return playerName(state.sitOutIndex);
   }
 
   function teamNames() {
-    return state.playerNames.filter((_, i) => i !== state.sitOutIndex);
+    return state.playerNames
+      .map((_, i) => playerName(i))
+      .filter((_, i) => i !== state.sitOutIndex);
   }
 
   function renderSendOut() {

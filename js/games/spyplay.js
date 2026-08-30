@@ -28,8 +28,12 @@ function assignInnocentRoles(location, count, spyIndex) {
   return assigned;
 }
 
-export function createSpyfall(container, { goHome, ui }) {
+export function createSpyfall(container, { goHome, ui, roster }) {
   let state = { phase: 'setup' };
+
+  function playerName(i) {
+    return roster.label(state.playerNames[i], i);
+  }
 
   function render() {
     switch (state.phase) {
@@ -41,11 +45,15 @@ export function createSpyfall(container, { goHome, ui }) {
   }
 
   function renderSetup() {
+    if (!state.playerNames) {
+      const loaded = roster.loadPlayers({ defaultCount: 4, min: 3, max: 12 });
+      state.playerCount = loaded.playerCount;
+      state.playerNames = loaded.playerNames;
+    }
     state.playerCount = state.playerCount || 4;
     state.timerMinutes = state.timerMinutes || 5;
     state.rolesEnabled = state.rolesEnabled !== false;
     state.scenePackId = state.scenePackId || SCENE_PACKS[0].id;
-    state.playerNames = state.playerNames || Array.from({ length: state.playerCount }, (_, i) => `Player ${i + 1}`);
 
     container.innerHTML = `
       ${ui.header('Spyfall', goHome)}
@@ -70,7 +78,7 @@ export function createSpyfall(container, { goHome, ui }) {
         <div class="form-group">
           <label>Player names</label>
           ${state.playerNames.map((name, i) => `
-            <input type="text" data-player="${i}" value="${name}" placeholder="Player ${i + 1}" style="margin-bottom:0.5rem">
+            <input type="text" data-player="${i}" value="${name}" placeholder="Name" autocomplete="off" style="margin-bottom:0.5rem">
           `).join('')}
         </div>
         <div class="form-group">
@@ -111,22 +119,21 @@ export function createSpyfall(container, { goHome, ui }) {
     container.querySelector('[data-action="dec-players"]')?.addEventListener('click', () => {
       if (state.playerCount > 3) {
         state.playerCount--;
-        state.playerNames = state.playerNames.slice(0, state.playerCount);
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         renderSetup();
       }
     });
     container.querySelector('[data-action="inc-players"]')?.addEventListener('click', () => {
       if (state.playerCount < 12) {
         state.playerCount++;
-        while (state.playerNames.length < state.playerCount) {
-          state.playerNames.push(`Player ${state.playerNames.length + 1}`);
-        }
+        state.playerNames = roster.padPlayers(state.playerNames, state.playerCount);
         renderSetup();
       }
     });
     container.querySelectorAll('[data-player]').forEach(input => {
       input.addEventListener('input', e => {
-        state.playerNames[+e.target.dataset.player] = e.target.value || `Player ${+e.target.dataset.player + 1}`;
+        state.playerNames[+e.target.dataset.player] = e.target.value;
+        roster.savePlayers(state.playerNames);
       });
     });
     container.querySelectorAll('[data-minutes]').forEach(chip => {
@@ -164,6 +171,7 @@ export function createSpyfall(container, { goHome, ui }) {
   }
 
   function startGame() {
+    roster.savePlayers(state.playerNames);
     const pool = getLocationsForPack(state.scenePackId);
     const location = pickRandom(pool);
     const spyIndex = Math.floor(Math.random() * state.playerCount);
@@ -180,7 +188,7 @@ export function createSpyfall(container, { goHome, ui }) {
   }
 
   function renderReveal() {
-    const name = state.playerNames[state.currentPlayer];
+    const name = playerName(state.currentPlayer);
 
     if (!state.revealed) {
       container.innerHTML = `
@@ -253,7 +261,7 @@ export function createSpyfall(container, { goHome, ui }) {
   }
 
   function renderResult() {
-    const spyName = state.playerNames[state.spyIndex];
+    const spyName = playerName(state.spyIndex);
 
     container.innerHTML = `
       ${ui.header('Spyfall', goHome)}
@@ -269,7 +277,7 @@ export function createSpyfall(container, { goHome, ui }) {
         <ul class="player-list">
           ${state.playerNames.map((name, i) => `
             <li class="player-item" style="pointer-events:none">
-              ${name} — ${roleDisplay(name, i)}
+              ${playerName(i)} — ${roleDisplay(name, i)}
             </li>
           `).join('')}
         </ul>

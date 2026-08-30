@@ -17,7 +17,7 @@ function buildGenreDeck(selectedIds) {
   return shuffle(GENRES.filter(g => selectedIds.includes(g.id)));
 }
 
-export function createCallIt(container, { goHome, ui }) {
+export function createCallIt(container, { goHome, ui, roster }) {
   let state = { phase: 'setup' };
 
   function render() {
@@ -37,12 +37,12 @@ export function createCallIt(container, { goHome, ui }) {
     return `
       <div class="team-scoreboard">
         <div class="team-score team-score--a ${state.scores.a >= state.pointsToWin ? 'team-score--winning' : ''}">
-          <span class="team-score-name">${state.teamA}</span>
+          <span class="team-score-name">${teamName('a')}</span>
           <span class="team-score-pts">${state.scores.a}</span>
         </div>
         <span class="team-score-vs">vs</span>
         <div class="team-score team-score--b ${state.scores.b >= state.pointsToWin ? 'team-score--winning' : ''}">
-          <span class="team-score-name">${state.teamB}</span>
+          <span class="team-score-name">${teamName('b')}</span>
           <span class="team-score-pts">${state.scores.b}</span>
         </div>
       </div>
@@ -51,8 +51,11 @@ export function createCallIt(container, { goHome, ui }) {
   }
 
   function renderSetup() {
-    state.teamA = state.teamA ?? 'Team 1';
-    state.teamB = state.teamB ?? 'Team 2';
+    if (state.teamA == null || state.teamB == null) {
+      const teams = roster.loadTeams();
+      state.teamA = state.teamA ?? teams.teamA;
+      state.teamB = state.teamB ?? teams.teamB;
+    }
     state.pointsToWin = state.pointsToWin ?? 7;
     state.nameSeconds = state.nameSeconds ?? NAME_SECONDS;
     state.selectedGenres = state.selectedGenres?.filter(id => GENRES.some(g => g.id === id)) ?? GENRES.map(g => g.id);
@@ -71,11 +74,11 @@ export function createCallIt(container, { goHome, ui }) {
         <h2>Teams</h2>
         <div class="form-group">
           <label>Team 1 name</label>
-          <input type="text" data-team="a" value="${state.teamA}">
+          <input type="text" data-team="a" value="${state.teamA}" placeholder="Team 1" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Team 2 name</label>
-          <input type="text" data-team="b" value="${state.teamB}">
+          <input type="text" data-team="b" value="${state.teamB}" placeholder="Team 2" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Points to win</label>
@@ -106,8 +109,14 @@ export function createCallIt(container, { goHome, ui }) {
       <button class="btn btn-primary" data-action="start">Start game</button>
     `;
 
-    container.querySelector('[data-team="a"]')?.addEventListener('input', e => { state.teamA = e.target.value || 'Team 1'; });
-    container.querySelector('[data-team="b"]')?.addEventListener('input', e => { state.teamB = e.target.value || 'Team 2'; });
+    container.querySelector('[data-team="a"]')?.addEventListener('input', e => {
+      state.teamA = e.target.value;
+      roster.saveTeams(state.teamA, state.teamB);
+    });
+    container.querySelector('[data-team="b"]')?.addEventListener('input', e => {
+      state.teamB = e.target.value;
+      roster.saveTeams(state.teamA, state.teamB);
+    });
     container.querySelectorAll('[data-points]').forEach(chip => {
       chip.addEventListener('click', () => { state.pointsToWin = +chip.dataset.points; renderSetup(); });
     });
@@ -128,6 +137,7 @@ export function createCallIt(container, { goHome, ui }) {
   }
 
   function startGame() {
+    roster.saveTeams(state.teamA, state.teamB);
     state.deck = buildGenreDeck(state.selectedGenres);
     state.deckIndex = 0;
     state.scores = { a: 0, b: 0 };
@@ -159,7 +169,7 @@ export function createCallIt(container, { goHome, ui }) {
   }
 
   function teamName(team) {
-    return team === 'a' ? state.teamA : state.teamB;
+    return roster.labelTeam(team === 'a' ? state.teamA : state.teamB, team);
   }
 
   function renderGenre() {
@@ -199,8 +209,8 @@ export function createCallIt(container, { goHome, ui }) {
         <div class="form-group">
           <label>Challenged team</label>
           <div class="chip-group">
-            <span class="chip ${state.challengedTeam === 'a' ? 'active' : ''}" data-challenged="a">${state.teamA}</span>
-            <span class="chip ${state.challengedTeam === 'b' ? 'active' : ''}" data-challenged="b">${state.teamB}</span>
+            <span class="chip ${state.challengedTeam === 'a' ? 'active' : ''}" data-challenged="a">${teamName('a')}</span>
+            <span class="chip ${state.challengedTeam === 'b' ? 'active' : ''}" data-challenged="b">${teamName('b')}</span>
           </div>
         </div>
         <div class="form-group">
@@ -326,7 +336,7 @@ export function createCallIt(container, { goHome, ui }) {
       ${ui.header('Call It', goHome)}
       <div class="result-box">
         <p class="result-title">🏆 ${winnerName} wins!</p>
-        <p class="result-sub">Final score: ${state.teamA} ${state.scores.a} – ${state.scores.b} ${state.teamB}</p>
+        <p class="result-sub">Final score: ${teamName('a')} ${state.scores.a} – ${state.scores.b} ${teamName('b')}</p>
       </div>
       ${teamScoreboard()}
       <button class="btn btn-primary" data-action="again">Play again</button>

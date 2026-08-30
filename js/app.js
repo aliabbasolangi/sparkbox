@@ -7,7 +7,7 @@ import { createHotTakes, HOTTAKES_SESSION } from './games/hottakes.js';
 import { createInstall } from './install.js';
 
 const GAMES = [
-  { id: 'hottakes', name: 'Hot Takes', icon: '🔥' },
+  { id: 'hottakes', name: 'Allegedly', icon: '🔥' },
   { id: 'spyplay', name: 'Incognito', icon: '🕵️' },
   { id: 'mafia', name: 'Mafia', icon: '🌙' },
   { id: 'impostor', name: 'Impostor', icon: '🎭' },

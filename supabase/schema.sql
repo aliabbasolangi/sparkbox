@@ -1,5 +1,5 @@
 -- Paste this entire file into Supabase → SQL Editor → Run.
--- One time. Then Hot Takes can create rooms.
+-- One time. Then Allegedly can create rooms.
 
 create table if not exists rooms (
   id uuid primary key default gen_random_uuid(),

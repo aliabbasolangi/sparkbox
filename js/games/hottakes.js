@@ -417,7 +417,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
 
   function renderSetup() {
     container.innerHTML = `
-      ${ui.header('Hot Takes')}
+      ${ui.header('Allegedly')}
       ${ui.howTo([
         'One person <strong>hosts</strong>. Everyone else joins with the room code on their own phone',
         'Each round is a prompt about someone in the room. Write the funniest or most true answer in secret',
@@ -459,12 +459,12 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
 
   function renderLobby() {
     container.innerHTML = `
-      ${ui.header('Hot Takes')}
+      ${ui.header('Allegedly')}
       ${banner()}
       <div class="room-code-card">
         <p class="room-code-label">Room code</p>
         <p class="room-code">${escape(room.code)}</p>
-        <p class="helper-text">Others open Sparkbox → Hot Takes → type this code</p>
+        <p class="helper-text">Others open Sparkbox → Allegedly → type this code</p>
       </div>
       <div class="panel">
         <h2>In the room · ${players.length}</h2>
@@ -485,7 +485,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   function renderWrite() {
     const waiting = othersWriting();
     container.innerHTML = `
-      ${ui.header('Hot Takes')}
+      ${ui.header('Allegedly')}
       ${banner()}
       <div class="phase-banner">Round ${room.round} of ${totalRounds()} · write in secret</div>
       <div class="panel challenge-panel">
@@ -512,7 +512,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     const mine = myAnswer();
     const shuffled = [...answers].sort((a, b) => a.id.localeCompare(b.id));
     container.innerHTML = `
-      ${ui.header('Hot Takes')}
+      ${ui.header('Allegedly')}
       ${banner()}
       <div class="phase-banner">Round ${room.round} of ${totalRounds()} · vote the best</div>
       <div class="panel">
@@ -547,7 +547,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
         ? `${winnerNames[0]} takes the round`
         : `${winnerNames.join(' & ')} share the round`;
     container.innerHTML = `
-      ${ui.header('Hot Takes')}
+      ${ui.header('Allegedly')}
       ${banner()}
       <div class="result-box">
         <p class="result-title">${finished ? 'That’s the game' : winnerLine}</p>

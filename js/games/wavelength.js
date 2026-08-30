@@ -22,13 +22,13 @@ function pickRandom(arr) {
 
 function closenessCopy(diff) {
   if (diff === 0) return { title: 'Nailed it', sub: 'Exact hit. That was a 10/10 read.' };
-  if (diff === 1) return { title: 'So close', sub: 'Off by 1. Almost on the wavelength.' };
+  if (diff === 1) return { title: 'So close', sub: 'Off by 1. Almost read the room.' };
   if (diff === 2) return { title: 'In the neighborhood', sub: 'Off by 2. The vibe was close, the number wasn’t.' };
   if (diff === 3) return { title: 'Somewhere nearby', sub: 'Off by 3. They heard you — just not clearly.' };
   return { title: 'Way off', sub: `Off by ${diff}. Different planet.` };
 }
 
-export function createWaveLength(container, { goHome, ui, roster }) {
+export function createWaveLength(container, { goHome, ui, roster, setResume }) {
   let state = { phase: 'setup' };
 
   function playerName(i) {
@@ -58,16 +58,13 @@ export function createWaveLength(container, { goHome, ui, roster }) {
     if (state.sitOutPick == null) state.sitOutPick = 0;
 
     container.innerHTML = `
-      ${ui.header('Wave Length', goHome)}
-      <div class="panel">
-        <h2>How to play</h2>
-        <ul>
-          <li>One player sits out. Everyone else looks at <strong>one shared number</strong> (1–10)</li>
-          <li>Bring them back. They ask <strong>3 questions</strong> — the team answers as that number out of 10</li>
-          <li>Example: number is 10, question is “name a food?” → they name a 10/10 food</li>
-          <li>After three questions, the sit-out player locks in a number. See how close they were</li>
-        </ul>
-      </div>
+      ${ui.header('Read the Room', goHome)}
+      ${ui.howTo([
+        'One player sits out. Everyone else looks at <strong>one shared number</strong> (1–10)',
+        'Bring them back. They ask <strong>3 questions</strong> — the team answers as that number out of 10',
+        'Example: number is 10, question is “name a food?” → they name a 10/10 food',
+        'After three questions, the sit-out player locks in a number. See how close they were',
+      ], roster.howToOpen !== false)}
       <div class="panel">
         <h2>Players</h2>
         <div class="form-group">
@@ -135,10 +132,12 @@ export function createWaveLength(container, { goHome, ui, roster }) {
       });
     });
     container.querySelector('[data-action="start"]')?.addEventListener('click', startRound);
+    ui.bindHowTo(container, roster);
   }
 
   function startRound() {
     roster.savePlayers(state.playerNames);
+    roster.collapseHowTo();
     state.sitOutIndex = state.sitOutMode === 'pick'
       ? state.sitOutPick
       : Math.floor(Math.random() * state.playerCount);
@@ -161,7 +160,7 @@ export function createWaveLength(container, { goHome, ui, roster }) {
 
   function renderSendOut() {
     container.innerHTML = `
-      ${ui.header('Wave Length', goHome)}
+      ${ui.header('Read the Room', goHome)}
       <div class="pass-screen">
         <p class="pass-label">Get them out of earshot</p>
         <p class="pass-player">${sitOutName()}</p>
@@ -182,7 +181,7 @@ export function createWaveLength(container, { goHome, ui, roster }) {
   function renderShowNumber() {
     const team = teamNames().join(', ');
     container.innerHTML = `
-      ${ui.header('Wave Length', goHome)}
+      ${ui.header('Read the Room', goHome)}
       <div class="phase-banner">Team only — hide this from ${sitOutName()}</div>
       <div class="wave-number-card">
         <p class="wave-number-label">Your number</p>
@@ -192,7 +191,7 @@ export function createWaveLength(container, { goHome, ui, roster }) {
       <div class="panel">
         <h2>How to answer</h2>
         <p>When ${sitOutName()} asks a question, answer as a <strong>${state.number}/10</strong>.</p>
-        <p class="helper-text" style="margin-top:0.75rem">If they ask “name a food?” and this is ${state.number}, name a ${state.number}/10 food. Same wavelength, every answer. Team: ${team}.</p>
+        <p class="helper-text" style="margin-top:0.75rem">If they ask “name a food?” and this is ${state.number}, name a ${state.number}/10 food. Same vibe, every answer. Team: ${team}.</p>
       </div>
       <button class="btn btn-primary" data-action="hide">Hide the number</button>
     `;
@@ -205,7 +204,7 @@ export function createWaveLength(container, { goHome, ui, roster }) {
 
   function renderBringBack() {
     container.innerHTML = `
-      ${ui.header('Wave Length', goHome)}
+      ${ui.header('Read the Room', goHome)}
       <div class="pass-screen">
         <p class="pass-label">Number is hidden</p>
         <p class="pass-player">Bring ${sitOutName()} back</p>
@@ -227,7 +226,7 @@ export function createWaveLength(container, { goHome, ui, roster }) {
   function renderQuestions() {
     const n = state.questionIndex + 1;
     container.innerHTML = `
-      ${ui.header('Wave Length', goHome)}
+      ${ui.header('Read the Room', goHome)}
       <div class="phase-banner">Question ${n} of 3</div>
       <div class="panel">
         <h2>${sitOutName()} asks</h2>
@@ -262,7 +261,7 @@ export function createWaveLength(container, { goHome, ui, roster }) {
 
   function renderGuess() {
     container.innerHTML = `
-      ${ui.header('Wave Length', goHome)}
+      ${ui.header('Read the Room', goHome)}
       <div class="phase-banner">${sitOutName()} locks in</div>
       <div class="panel">
         <h2>What number were they on?</h2>
@@ -292,7 +291,7 @@ export function createWaveLength(container, { goHome, ui, roster }) {
     const diff = Math.abs(state.guess - state.number);
     const copy = closenessCopy(diff);
     container.innerHTML = `
-      ${ui.header('Wave Length', goHome)}
+      ${ui.header('Read the Room', goHome)}
       <div class="result-box">
         <p class="result-title">${copy.title}</p>
         <p class="result-sub">${copy.sub}</p>
@@ -327,5 +326,6 @@ export function createWaveLength(container, { goHome, ui, roster }) {
     container.querySelector('[data-action="home"]')?.addEventListener('click', goHome);
   }
 
+  setResume?.(() => render());
   render();
 }

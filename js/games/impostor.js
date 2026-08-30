@@ -13,7 +13,7 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function createImpostor(container, { goHome, ui, roster }) {
+export function createImpostor(container, { goHome, ui, roster, setResume }) {
   let state = { phase: 'setup' };
 
   function playerName(i) {
@@ -37,19 +37,19 @@ export function createImpostor(container, { goHome, ui, roster }) {
     }
     state.playerCount = state.playerCount || 4;
     state.timerMinutes = state.timerMinutes || 5;
+    state.hintsEnabled = state.hintsEnabled !== false;
     state.selectedGenres = state.selectedGenres?.filter(id => IMPOSTOR_GENRES.some(g => g.id === id))
       ?? IMPOSTOR_GENRES.map(g => g.id);
 
     container.innerHTML = `
       ${ui.header('Impostor', goHome)}
-      <div class="panel">
-        <h2>How to play</h2>
-        <ul>
-          <li>Everyone gets the secret word — except one <strong>Impostor</strong> who only gets a hint</li>
-          <li>Take turns saying <strong>one word</strong> related to the word to prove you're legit</li>
-          <li>Debate in person, vote out the Impostor, or reveal when ready</li>
-        </ul>
-      </div>
+      ${ui.howTo([
+        state.hintsEnabled
+          ? 'Everyone gets the secret word — except one <strong>Impostor</strong> who only gets a hint'
+          : 'Everyone gets the secret word — except one <strong>Impostor</strong> who gets nothing',
+        'Take turns saying <strong>one word</strong> related to the word to prove you\'re legit',
+        'Debate in person, vote out the Impostor, or reveal when ready',
+      ], roster.howToOpen !== false)}
       <div class="panel">
         <h2>Settings</h2>
         <div class="form-group">
@@ -73,6 +73,16 @@ export function createImpostor(container, { goHome, ui, roster }) {
               <span class="chip ${state.selectedGenres.includes(g.id) ? 'active' : ''}" data-genre="${g.id}">${g.name}</span>
             `).join('')}
           </div>
+        </div>
+        <div class="form-group">
+          <label>Impostor hints</label>
+          <div class="chip-group">
+            <span class="chip ${state.hintsEnabled ? 'active' : ''}" data-hints="on">On</span>
+            <span class="chip ${!state.hintsEnabled ? 'active' : ''}" data-hints="off">Off</span>
+          </div>
+          <p class="helper-text">${state.hintsEnabled
+            ? 'The Impostor sees a hint word. Everyone else sees the secret word.'
+            : 'The Impostor only knows they are the Impostor — no hint word.'}</p>
         </div>
         <div class="form-group">
           <label>Discussion timer</label>
@@ -116,14 +126,22 @@ export function createImpostor(container, { goHome, ui, roster }) {
         renderSetup();
       });
     });
+    container.querySelectorAll('[data-hints]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        state.hintsEnabled = chip.dataset.hints === 'on';
+        renderSetup();
+      });
+    });
     container.querySelectorAll('[data-minutes]').forEach(chip => {
       chip.addEventListener('click', () => { state.timerMinutes = +chip.dataset.minutes; renderSetup(); });
     });
     container.querySelector('[data-action="start"]')?.addEventListener('click', startGame);
+    ui.bindHowTo(container, roster);
   }
 
   function startGame() {
     roster.savePlayers(state.playerNames);
+    roster.collapseHowTo();
     const pool = buildWordPool(state.selectedGenres);
     state.wordEntry = pickRandom(pool.length ? pool : buildWordPool(IMPOSTOR_GENRES.map(g => g.id)));
     state.impostorIndex = Math.floor(Math.random() * state.playerCount);
@@ -145,7 +163,7 @@ export function createImpostor(container, { goHome, ui, roster }) {
           <p class="pass-player">${name}</p>
           <div class="pass-hidden" data-action="reveal">
             <div class="tap-icon">👁️</div>
-            <p>Tap to see your word</p>
+            <p>Tap to see your card</p>
           </div>
           <p class="hint-text">Don't let anyone else peek!</p>
         </div>
@@ -162,8 +180,10 @@ export function createImpostor(container, { goHome, ui, roster }) {
           <div class="reveal-card ${isImpostor ? 'spy' : 'innocent'}">
             <p class="reveal-role">${isImpostor ? '🎭 Impostor' : '✓ In the know'}</p>
             ${isImpostor
-              ? `<p class="word-reveal">${state.wordEntry.hint}</p>
-                 <p class="reveal-detail">Your hint word only. Listen to others, say one related word on your turn, and don't get caught.</p>`
+              ? (state.hintsEnabled
+                ? `<p class="word-reveal">${state.wordEntry.hint}</p>
+                   <p class="reveal-detail">Your hint word only. Listen to others, say one related word on your turn, and don't get caught.</p>`
+                : `<p class="reveal-detail">You don't get the word or a hint. Listen hard, say one word on your turn, and don't get caught.</p>`)
               : `<p class="word-reveal">${state.wordEntry.word}</p>
                  <p class="reveal-detail">Genre: <strong>${state.wordEntry.genre}</strong><br>On your turn, say one word that fits — help spot who doesn't know the word.</p>`}
           </div>
@@ -215,8 +235,9 @@ export function createImpostor(container, { goHome, ui, roster }) {
         <p class="result-title">The reveal</p>
         <p class="result-sub">
           The Impostor was <strong>${impostorName}</strong><br>
-          The word was <strong>${state.wordEntry.word}</strong><br>
-          Hint was: <strong>${state.wordEntry.hint}</strong>
+          The word was <strong>${state.wordEntry.word}</strong>${state.hintsEnabled
+            ? `<br>Hint was: <strong>${state.wordEntry.hint}</strong>`
+            : ''}
         </p>
       </div>
       <button class="btn btn-primary" data-action="again">Play again</button>
@@ -226,5 +247,6 @@ export function createImpostor(container, { goHome, ui, roster }) {
     container.querySelector('[data-action="home"]')?.addEventListener('click', goHome);
   }
 
+  setResume?.(() => render());
   render();
 }

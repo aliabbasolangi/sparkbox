@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Sparkbox — Party Games</title>
-  <link rel="icon" href="images/logo.jpg" type="image/jpeg">
+  <link rel="icon" href="images/logo.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,12 +26,10 @@
   <div id="app">
     <section id="screen-home" class="screen active">
       <header class="hero">
-        <p class="hero-badge">🎉 pass &amp; play</p>
         <h1 class="wordmark">
-          <span class="wordmark-top">spark</span>
-          <span class="wordmark-bottom">box</span>
+          <img src="images/logo.png" alt="sparkbox" class="wordmark-logo">
         </h1>
-        <p class="tagline">One phone. Your whole crew. Pick a game.</p>
+        <p class="tagline">Party games that never lose their spark.</p>
       </header>
 
       <p class="section-label">Tonight's lineup</p>
@@ -40,7 +38,7 @@
         <button class="game-card game-card--spy" data-game="spyplay">
           <span class="game-card-icon">🕵️</span>
           <span class="game-card-body">
-            <span class="game-name">Spyfall</span>
+            <span class="game-name">Incognito</span>
             <span class="game-desc">Who's the spy? Ask questions, find the imposter.</span>
           </span>
           <span class="game-card-go" aria-hidden="true">→</span>
@@ -72,15 +70,23 @@
         <button class="game-card game-card--wavelength" data-game="wavelength">
           <span class="game-card-icon">📡</span>
           <span class="game-card-body">
-            <span class="game-name">Wave Length</span>
+            <span class="game-name">Read the Room</span>
             <span class="game-desc">One sits out. The rest share a number. Guess it from three answers.</span>
+          </span>
+          <span class="game-card-go" aria-hidden="true">→</span>
+        </button>
+        <button class="game-card game-card--install" data-game="install">
+          <span class="game-card-icon">📲</span>
+          <span class="game-card-body">
+            <span class="game-name">Add to home screen</span>
+            <span class="game-desc">Save Sparkbox on your device. iOS app coming soon.</span>
           </span>
           <span class="game-card-go" aria-hidden="true">→</span>
         </button>
       </div>
 
       <footer class="home-footer">
-        <p>No accounts · No setup · Just pass the phone</p>
+        <p>No accounts · No setup · Just pass the device</p>
       </footer>
     </section>
 

@@ -17,7 +17,7 @@ function buildGenreDeck(selectedIds) {
   return shuffle(GENRES.filter(g => selectedIds.includes(g.id)));
 }
 
-export function createCallIt(container, { goHome, ui, roster }) {
+export function createCallIt(container, { goHome, ui, roster, setResume }) {
   let state = { phase: 'setup' };
 
   function render() {
@@ -62,14 +62,11 @@ export function createCallIt(container, { goHome, ui, roster }) {
 
     container.innerHTML = `
       ${ui.header('Call It', goHome)}
-      <div class="panel">
-        <h2>How to play</h2>
-        <ul>
-          <li>Two teams bid in person — "I can name 5…" "I can name 8…" until someone <strong>calls it</strong></li>
-          <li>The challenged player must name that many items in 30 seconds</li>
-          <li>Make it → their team gets 1 point. Fail → other team gets 1 point</li>
-        </ul>
-      </div>
+      ${ui.howTo([
+        'Two teams bid in person — "I can name 5…" "I can name 8…" until someone <strong>calls it</strong>',
+        'The challenged player must name that many items in 30 seconds',
+        'Make it → their team gets 1 point. Fail → other team gets 1 point',
+      ], roster.howToOpen !== false)}
       <div class="panel">
         <h2>Teams</h2>
         <div class="form-group">
@@ -134,10 +131,12 @@ export function createCallIt(container, { goHome, ui, roster }) {
       chip.addEventListener('click', () => { state.nameSeconds = +chip.dataset.seconds; renderSetup(); });
     });
     container.querySelector('[data-action="start"]')?.addEventListener('click', startGame);
+    ui.bindHowTo(container, roster);
   }
 
   function startGame() {
     roster.saveTeams(state.teamA, state.teamB);
+    roster.collapseHowTo();
     state.deck = buildGenreDeck(state.selectedGenres);
     state.deckIndex = 0;
     state.scores = { a: 0, b: 0 };
@@ -346,5 +345,6 @@ export function createCallIt(container, { goHome, ui, roster }) {
     container.querySelector('[data-action="home"]')?.addEventListener('click', goHome);
   }
 
+  setResume?.(() => render());
   render();
 }

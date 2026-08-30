@@ -28,7 +28,7 @@ function assignInnocentRoles(location, count, spyIndex) {
   return assigned;
 }
 
-export function createSpyfall(container, { goHome, ui, roster }) {
+export function createSpyfall(container, { goHome, ui, roster, setResume }) {
   let state = { phase: 'setup' };
 
   function playerName(i) {
@@ -53,18 +53,17 @@ export function createSpyfall(container, { goHome, ui, roster }) {
     state.playerCount = state.playerCount || 4;
     state.timerMinutes = state.timerMinutes || 5;
     state.rolesEnabled = state.rolesEnabled !== false;
-    state.scenePackId = state.scenePackId || SCENE_PACKS[0].id;
+    state.scenePackId = SCENE_PACKS.some(p => p.id === state.scenePackId)
+      ? state.scenePackId
+      : SCENE_PACKS[0].id;
 
     container.innerHTML = `
-      ${ui.header('Spyfall', goHome)}
-      <div class="panel">
-        <h2>How to play</h2>
-        <ul>
-          <li>Everyone gets a location — except one spy who knows nothing</li>
-          <li>Ask questions to find who doesn't belong</li>
-          <li>Accuse and debate in person — use this app only to deal roles and reveal at the end</li>
-        </ul>
-      </div>
+      ${ui.header('Incognito', goHome)}
+      ${ui.howTo([
+        'Everyone gets a location — except one spy who knows nothing',
+        'The spy blends in. Ask questions, then vote someone out in person',
+        'If you vote out anyone else, the spy wins. If you vote the spy, they guess the location out loud — right they win, wrong they lose',
+      ], roster.howToOpen !== false)}
       <div class="panel">
         <h2>Players</h2>
         <div class="form-group">
@@ -112,6 +111,7 @@ export function createSpyfall(container, { goHome, ui, roster }) {
       <button class="btn btn-primary" data-action="start">Launch mission</button>
     `;
 
+    ui.bindHowTo(container, roster);
     bindSetup();
   }
 
@@ -172,6 +172,7 @@ export function createSpyfall(container, { goHome, ui, roster }) {
 
   function startGame() {
     roster.savePlayers(state.playerNames);
+    roster.collapseHowTo();
     const pool = getLocationsForPack(state.scenePackId);
     const location = pickRandom(pool);
     const spyIndex = Math.floor(Math.random() * state.playerCount);
@@ -192,7 +193,7 @@ export function createSpyfall(container, { goHome, ui, roster }) {
 
     if (!state.revealed) {
       container.innerHTML = `
-        ${ui.header('Spyfall', goHome)}
+        ${ui.header('Incognito', goHome)}
         <div class="pass-screen">
           <p class="pass-label">Pass the device to</p>
           <p class="pass-player">${name}</p>
@@ -211,13 +212,13 @@ export function createSpyfall(container, { goHome, ui, roster }) {
       const isSpy = state.currentPlayer === state.spyIndex;
       const role = state.playerRoles[state.currentPlayer];
       container.innerHTML = `
-        ${ui.header('Spyfall', goHome)}
+        ${ui.header('Incognito', goHome)}
         <div class="pass-screen">
           <p class="pass-label">${name}'s role</p>
           <div class="reveal-card ${isSpy ? 'spy' : 'innocent'}">
             <p class="reveal-role">${isSpy ? '🕵️ Spy' : state.location.name}</p>
             <p class="reveal-detail">${isSpy
-              ? 'You don\'t know the location. Blend in, listen carefully, and guess it before you\'re caught!'
+              ? 'You don\'t know the location. Blend in so they vote someone else. If they catch you, guess the location out loud.'
               : innocentDetail(role)}</p>
           </div>
           <button class="btn btn-primary" data-action="next">
@@ -247,10 +248,10 @@ export function createSpyfall(container, { goHome, ui, roster }) {
 
   function renderDiscuss() {
     container.innerHTML = `
-      ${ui.header('Spyfall', goHome)}
+      ${ui.header('Incognito', goHome)}
       <div class="phase-banner discuss">Discussion</div>
       <div class="panel">
-        <p>Ask each other questions about the location. Accuse, debate, and vote in person — the app won't track that.</p>
+        <p>Ask questions about the location, then vote someone out in person. If you catch the spy, they guess the location out loud. The app only reveals at the end.</p>
       </div>
       ${ui.timer(state.timeLeft, state.timerMinutes * 60)}
       <button class="btn btn-primary" data-action="reveal">Reveal answers</button>
@@ -264,7 +265,7 @@ export function createSpyfall(container, { goHome, ui, roster }) {
     const spyName = playerName(state.spyIndex);
 
     container.innerHTML = `
-      ${ui.header('Spyfall', goHome)}
+      ${ui.header('Incognito', goHome)}
       <div class="result-box">
         <p class="result-title">The reveal</p>
         <p class="result-sub">
@@ -292,5 +293,6 @@ export function createSpyfall(container, { goHome, ui, roster }) {
     container.querySelector('[data-action="home"]')?.addEventListener('click', goHome);
   }
 
+  setResume?.(() => render());
   render();
 }

@@ -117,6 +117,8 @@ body {
 .wordmark-logo {
   display: block;
   width: min(240px, 64vw);
+  max-width: 240px;
+  max-height: 160px;
   height: auto;
   background: transparent;
 }

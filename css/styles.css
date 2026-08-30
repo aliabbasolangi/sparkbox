@@ -171,6 +171,7 @@ body {
   box-shadow: var(--shadow-hover);
 }
 
+.game-card--hottakes { border-left: 8px solid #FF7043; }
 .game-card--spy { border-left: 8px solid #7E57C2; }
 .game-card--mafia { border-left: 8px solid #EF5350; }
 .game-card--impostor { border-left: 8px solid #AB47BC; }
@@ -1213,4 +1214,198 @@ select:focus, input:focus {
   background: var(--ink);
   color: var(--white);
   box-shadow: none;
+}
+
+/* Hot Takes */
+.room-code-card {
+  text-align: center;
+  padding: 1.5rem 1rem 1.25rem;
+  margin-bottom: 1rem;
+  background: var(--white);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.room-code-label {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 0.15rem;
+}
+
+.room-code {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 16vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  color: var(--ink);
+  padding-left: 0.18em;
+}
+
+.room-code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: #f5f5f5;
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.45;
+  outline: none;
+  resize: vertical;
+  min-height: 6.5rem;
+}
+
+textarea:focus {
+  box-shadow: 0 0 0 3px rgba(41, 182, 246, 0.4);
+}
+
+.player-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.player-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 3px solid var(--ink);
+  background: #f5f5f5;
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.player-pill.is-host {
+  background: var(--accent);
+}
+
+.player-pill.is-you {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.player-pill.is-host.is-you {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.take-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.take-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 1rem 1.05rem;
+  background: var(--white);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  color: var(--ink);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+button.take-card:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow);
+}
+
+.take-card.is-mine,
+.take-card:disabled {
+  opacity: 0.5;
+  cursor: default;
+  box-shadow: none;
+}
+
+.take-card.is-result {
+  cursor: default;
+  pointer-events: none;
+}
+
+.take-card.is-winner {
+  background: var(--accent-bg);
+  box-shadow: var(--shadow);
+}
+
+.take-card-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.take-card-tag,
+.take-card-meta {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.score-rows {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  background: #f5f5f5;
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.score-row.is-you {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.score-row-place {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+
+.score-row.is-you .score-row-place {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.score-row-name {
+  font-weight: 700;
+}
+
+.score-row-pts {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
 }

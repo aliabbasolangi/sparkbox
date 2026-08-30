@@ -3,9 +3,11 @@ import { createMafia } from './games/mafia.js';
 import { createCallIt } from './games/callit.js';
 import { createImpostor } from './games/impostor.js';
 import { createWaveLength } from './games/wavelength.js';
+import { createHotTakes, HOTTAKES_SESSION } from './games/hottakes.js';
 import { createInstall } from './install.js';
 
 const GAMES = [
+  { id: 'hottakes', name: 'Hot Takes', icon: '🔥' },
   { id: 'spyplay', name: 'Incognito', icon: '🕵️' },
   { id: 'mafia', name: 'Mafia', icon: '🌙' },
   { id: 'impostor', name: 'Impostor', icon: '🎭' },
@@ -318,8 +320,10 @@ function resumeParked(gameId) {
 function startFresh(gameId) {
   const existing = parked.get(gameId);
   if (existing) {
+    existing.cleanup?.();
     existing.root.remove();
     parked.delete(gameId);
+    if (gameId === 'hottakes') sessionStorage.removeItem(HOTTAKES_SESSION);
   }
   createFresh(gameId);
 }
@@ -334,7 +338,7 @@ function createFresh(gameId) {
   root.className = 'game-instance';
   gameScreen.appendChild(root);
 
-  const inst = { root, resume: null };
+  const inst = { root, resume: null, cleanup: null };
   parked.set(gameId, inst);
 
   const ctx = {
@@ -342,9 +346,11 @@ function createFresh(gameId) {
     ui,
     roster,
     setResume(fn) { inst.resume = fn; },
+    setCleanup(fn) { inst.cleanup = fn; },
   };
 
   switch (gameId) {
+    case 'hottakes': createHotTakes(root, ctx); break;
     case 'spyplay': createSpyfall(root, ctx); break;
     case 'mafia': createMafia(root, ctx); break;
     case 'callit': createCallIt(root, ctx); break;

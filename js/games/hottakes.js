@@ -1,5 +1,6 @@
 import { supabase, makeCode, makeId } from '../online/client.js';
 import { HOT_TAKES_PROMPTS, ROUNDS_TO_PLAY } from '../data/hottakes-prompts.js';
+import { PFPS, pfpImg, pfpPicker } from '../data/pfps.js';
 
 export const HOTTAKES_SESSION = 'sparkbox.hottakes';
 
@@ -17,7 +18,7 @@ function escape(s) {
 }
 
 export function createHotTakes(container, { ui, roster, setResume, setCleanup }) {
-  let me = { id: null, token: null, name: '' };
+  let me = { id: null, token: null, name: '', avatar: PFPS[0].id };
   let room = null;
   let players = [];
   let round = null;
@@ -34,6 +35,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     name: roster.names?.find(n => n.trim()) || '',
     code: '',
     rounds: 5,
+    avatar: PFPS[0].id,
   };
 
   function isHost() {
@@ -79,6 +81,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       playerId: me.id,
       token: me.token,
       name: me.name,
+      avatar: me.avatar,
     }));
   }
 
@@ -105,7 +108,8 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       sessionStorage.removeItem(HOTTAKES_SESSION);
       return false;
     }
-    me = { id: player.id, token: saved.token, name: player.name };
+    me = { id: player.id, token: saved.token, name: player.name, avatar: player.avatar || saved.avatar || PFPS[0].id };
+    setup.avatar = me.avatar;
     room = found;
     await subscribe();
     await refresh();
@@ -222,7 +226,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     joining = true;
     error = '';
     render();
-    me = { id: makeId(), token: makeId(), name };
+    me = { id: makeId(), token: makeId(), name, avatar: setup.avatar };
     let created = null;
     let roomErr = null;
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -253,12 +257,16 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       id: me.id,
       room_id: room.id,
       name,
+      avatar: setup.avatar,
       token: me.token,
       score: 0,
     });
     if (pErr) {
       joining = false;
-      error = pErr.message;
+      const detail = pErr.message || '';
+      error = /avatar|column/i.test(detail)
+        ? 'Need one more SQL step. In Supabase → SQL Editor, run supabase/add-avatar.sql, then try again.'
+        : detail;
       render();
       return;
     }
@@ -292,17 +300,21 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       render();
       return;
     }
-    me = { id: makeId(), token: makeId(), name };
+    me = { id: makeId(), token: makeId(), name, avatar: setup.avatar };
     const { error: pErr } = await supabase.from('players').insert({
       id: me.id,
       room_id: found.id,
       name,
+      avatar: setup.avatar,
       token: me.token,
       score: 0,
     });
     if (pErr) {
       joining = false;
-      error = pErr.message;
+      const detail = pErr.message || '';
+      error = /avatar|column/i.test(detail)
+        ? 'Need one more SQL step. In Supabase → SQL Editor, run supabase/add-avatar.sql, then try again.'
+        : detail;
       render();
       return;
     }
@@ -311,6 +323,19 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     joining = false;
     saveSession();
     await subscribe();
+    await refresh();
+  }
+
+  async function setAvatar(id) {
+    if (!PFPS.some(p => p.id === id)) return;
+    setup.avatar = id;
+    if (!me.id || !room) {
+      renderSetup();
+      return;
+    }
+    me.avatar = id;
+    await supabase.from('players').update({ avatar: id }).eq('id', me.id);
+    saveSession();
     await refresh();
   }
 
@@ -406,6 +431,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
           ${sorted.map((p, i) => `
             <li class="score-row ${p.id === me.id ? 'is-you' : ''}">
               <span class="score-row-place">${i + 1}</span>
+              ${pfpImg(p.avatar, 'pfp--sm')}
               <span class="score-row-name">${escape(p.name)}${p.id === me.id ? ' · you' : ''}</span>
               <span class="score-row-pts">${p.score}</span>
             </li>
@@ -428,6 +454,10 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
         <h2>Your name</h2>
         <div class="form-group">
           <input type="text" data-field="name" value="${escape(setup.name)}" placeholder="Name" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Your face</label>
+          ${pfpPicker(setup.avatar)}
         </div>
         <div class="form-group" style="margin-bottom:0">
           <label>Rounds</label>
@@ -453,6 +483,9 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     container.querySelectorAll('[data-rounds]').forEach(chip => {
       chip.addEventListener('click', () => { setup.rounds = +chip.dataset.rounds; renderSetup(); });
     });
+    container.querySelectorAll('[data-pfp]').forEach(btn => {
+      btn.addEventListener('click', () => setAvatar(btn.dataset.pfp));
+    });
     container.querySelector('[data-action="host"]')?.addEventListener('click', hostRoom);
     container.querySelector('[data-action="join"]')?.addEventListener('click', joinRoom);
   }
@@ -470,8 +503,15 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
         <h2>In the room · ${players.length}</h2>
         <div class="player-pills">
           ${players.map(p => `
-            <span class="player-pill ${p.id === room.host_id ? 'is-host' : ''}${p.id === me.id ? ' is-you' : ''}">${escape(p.name)}${p.id === me.id ? ' · you' : ''}</span>
+            <span class="player-pill ${p.id === room.host_id ? 'is-host' : ''}${p.id === me.id ? ' is-you' : ''}">
+              ${pfpImg(p.avatar, 'pfp--sm')}
+              ${escape(p.name)}${p.id === me.id ? ' · you' : ''}
+            </span>
           `).join('')}
+        </div>
+        <div class="form-group" style="margin:1rem 0 0">
+          <label>Your face</label>
+          ${pfpPicker(me.avatar || setup.avatar)}
         </div>
         <p class="helper-text">${players.length < 3 ? 'Need at least 3 people to start.' : `${totalRounds()} rounds. Highest score at the end wins.`}</p>
       </div>
@@ -480,6 +520,9 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
         : `<p class="hint-text">Waiting for the host to start…</p>`}
     `;
     container.querySelector('[data-action="start"]')?.addEventListener('click', startRound);
+    container.querySelectorAll('[data-pfp]').forEach(btn => {
+      btn.addEventListener('click', () => setAvatar(btn.dataset.pfp));
+    });
   }
 
   function renderWrite() {
@@ -561,7 +604,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
             const n = tally[a.id] || 0;
             return `<div class="take-card is-result ${winners.some(w => w.id === a.id) ? 'is-winner' : ''}">
               <span class="take-card-text">${escape(a.text)}</span>
-              <span class="take-card-meta">${escape(author?.name || '?')} · ${n} vote${n === 1 ? '' : 's'}</span>
+              <span class="take-card-meta">${pfpImg(author?.avatar, 'pfp--xs')} ${escape(author?.name || '?')} · ${n} vote${n === 1 ? '' : 's'}</span>
             </div>`;
           }).join('')}
         </div>

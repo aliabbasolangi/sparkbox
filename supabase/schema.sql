@@ -15,6 +15,7 @@ create table if not exists players (
   id uuid primary key default gen_random_uuid(),
   room_id uuid not null references rooms(id) on delete cascade,
   name text not null,
+  avatar text,
   token text not null,
   score int not null default 0,
   connected boolean not null default true,

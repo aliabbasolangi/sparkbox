@@ -385,6 +385,6 @@ function launchGame(gameId) {
 }
 
 /* ─── Init ─── */
-document.querySelectorAll('.game-card').forEach(card => {
+document.querySelectorAll('[data-game]').forEach(card => {
   card.addEventListener('click', () => launchGame(card.dataset.game));
 });

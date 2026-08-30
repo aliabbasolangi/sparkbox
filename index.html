@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=7">
+  <link rel="stylesheet" href="css/styles.css?v=9">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9172610701690985"
     crossorigin="anonymous"></script>
 </head>
@@ -18,85 +18,82 @@
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
     <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+    <div class="shape shape-5"></div>
     <span class="float-emoji float-1">🎉</span>
     <span class="float-emoji float-2">🎲</span>
     <span class="float-emoji float-3">✨</span>
     <span class="float-emoji float-4">🎭</span>
+    <span class="float-emoji float-5">❓</span>
+    <span class="float-emoji float-6">❔</span>
+    <span class="float-emoji float-7">❓</span>
+    <span class="float-emoji float-8">🔍</span>
+    <span class="float-emoji float-9">🔮</span>
+    <span class="float-emoji float-10">🗝️</span>
+    <span class="float-emoji float-11">👁️</span>
+    <span class="float-emoji float-12">🧩</span>
+    <span class="float-emoji float-13">❓</span>
+    <span class="float-emoji float-14">🕶️</span>
+    <span class="float-emoji float-15">❓</span>
+    <span class="float-emoji float-16">🕵️</span>
+    <span class="float-emoji float-17">❔</span>
   </div>
 
   <div id="app">
     <section id="screen-home" class="screen active">
-      <header class="hero">
+      <header class="home-topbar">
         <h1 class="wordmark">
-          <img src="images/logo.png" alt="sparkbox" class="wordmark-logo" width="240" height="151">
+          <img src="images/logo.png" alt="sparkbox" class="wordmark-logo wordmark-logo--compact" width="120" height="75">
         </h1>
-        <p class="tagline">Party games that never lose their spark.</p>
       </header>
 
-      <p class="section-label">Tonight's lineup</p>
+      <button class="poster" type="button" data-game="hottakes">
+        <span class="poster-kicker">Play on your phones</span>
+        <span class="poster-icon">🔥</span>
+        <span class="poster-name">Allegedly</span>
+        <span class="poster-desc">A prompt about someone in the room. Write the funniest or most true answer. Vote the best.</span>
+        <span class="game-meta">Easy · 15–25 min · 3–8 phones</span>
+        <span class="poster-go">Open →</span>
+      </button>
 
-      <div class="game-grid">
-        <button class="game-card game-card--hottakes" data-game="hottakes">
-          <span class="game-card-icon">🔥</span>
-          <span class="game-card-body">
-            <span class="game-name">Allegedly</span>
-            <span class="game-desc">A prompt about someone. Secret answers. Vote the funniest or most true.</span>
-          </span>
-          <span class="game-card-go" aria-hidden="true">→</span>
+      <div class="tile-grid">
+        <button class="tile tile--spy" type="button" data-game="spyplay">
+          <span class="tile-icon">🕵️</span>
+          <span class="tile-name">Incognito</span>
+          <span class="tile-desc">Ask questions. Find the spy who doesn’t know the location.</span>
+          <span class="game-meta">Easy · 10 min · 4–8</span>
         </button>
-        <button class="game-card game-card--spy" data-game="spyplay">
-          <span class="game-card-icon">🕵️</span>
-          <span class="game-card-body">
-            <span class="game-name">Incognito</span>
-            <span class="game-desc">Who's the spy? Ask questions, find the imposter.</span>
-          </span>
-          <span class="game-card-go" aria-hidden="true">→</span>
+        <button class="tile tile--mafia" type="button" data-game="mafia">
+          <span class="tile-icon">🌙</span>
+          <span class="tile-name">Mafia</span>
+          <span class="tile-desc">Town vs mafia. Lie, vote, and survive the night.</span>
+          <span class="game-meta">Medium · 20–30 min · 6–10</span>
         </button>
-        <button class="game-card game-card--mafia" data-game="mafia">
-          <span class="game-card-icon">🌙</span>
-          <span class="game-card-body">
-            <span class="game-name">Mafia</span>
-            <span class="game-desc">Lie, bluff, and survive the night.</span>
-          </span>
-          <span class="game-card-go" aria-hidden="true">→</span>
+        <button class="tile tile--impostor" type="button" data-game="impostor">
+          <span class="tile-icon">🎭</span>
+          <span class="tile-name">Impostor</span>
+          <span class="tile-desc">One word each turn. Spot who doesn’t know the word.</span>
+          <span class="game-meta">Easy · 10 min · 4–8</span>
         </button>
-        <button class="game-card game-card--impostor" data-game="impostor">
-          <span class="game-card-icon">🎭</span>
-          <span class="game-card-body">
-            <span class="game-name">Impostor</span>
-            <span class="game-desc">One word each turn — spot who doesn't know.</span>
-          </span>
-          <span class="game-card-go" aria-hidden="true">→</span>
+        <button class="tile tile--callit" type="button" data-game="callit">
+          <span class="tile-icon">⚡</span>
+          <span class="tile-name">Call It</span>
+          <span class="tile-desc">Two teams bid, then name that many under the clock.</span>
+          <span class="game-meta">Easy · 10–15 min · 2 teams</span>
         </button>
-        <button class="game-card game-card--callit" data-game="callit">
-          <span class="game-card-icon">⚡</span>
-          <span class="game-card-body">
-            <span class="game-name">Call It</span>
-            <span class="game-desc">Bid, call it, and name them under the clock.</span>
-          </span>
-          <span class="game-card-go" aria-hidden="true">→</span>
+        <button class="tile tile--wave" type="button" data-game="wavelength">
+          <span class="tile-icon">📡</span>
+          <span class="tile-name">Read the Room</span>
+          <span class="tile-desc">One sits out. Guess the number from three answers.</span>
+          <span class="game-meta">Easy · 10 min · 4–8</span>
         </button>
-        <button class="game-card game-card--wavelength" data-game="wavelength">
-          <span class="game-card-icon">📡</span>
-          <span class="game-card-body">
-            <span class="game-name">Read the Room</span>
-            <span class="game-desc">One sits out. The rest share a number. Guess it from three answers.</span>
-          </span>
-          <span class="game-card-go" aria-hidden="true">→</span>
-        </button>
-        <button class="game-card game-card--install" data-game="install">
-          <span class="game-card-icon">📲</span>
-          <span class="game-card-body">
-            <span class="game-name">Add to home screen</span>
-            <span class="game-desc">Save Sparkbox on your device. iOS app coming soon.</span>
-          </span>
-          <span class="game-card-go" aria-hidden="true">→</span>
+        <button class="tile tile--install" type="button" data-game="install">
+          <span class="tile-icon">📲</span>
+          <span class="tile-name">Add to home</span>
+          <span class="tile-desc">Save Sparkbox on your phone. iOS app coming soon.</span>
+          <span class="game-meta">30 sec · any phone</span>
         </button>
       </div>
-
-      <footer class="home-footer">
-        <p>No accounts · Pass the device — or play Allegedly on your phones</p>
-      </footer>
     </section>
 
     <section id="screen-game" class="screen"></section>
@@ -104,6 +101,6 @@
 
   <div id="modal-root" class="modal-root" hidden></div>
 
-  <script type="module" src="js/app.js?v=7"></script>
+  <script type="module" src="js/app.js?v=8"></script>
 </body>
 </html>

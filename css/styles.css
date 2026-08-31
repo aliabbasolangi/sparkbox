@@ -139,6 +139,10 @@ body {
   box-shadow: var(--shadow-hover);
 }
 
+.poster--blend {
+  border-left-color: #43A047;
+}
+
 .poster-kicker {
   font-family: var(--font-display);
   font-size: 0.75rem;
@@ -1603,4 +1607,66 @@ button.take-card:hover:not(:disabled) {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+.blend-secret {
+  text-align: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+  background: var(--accent-bg);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.pick-person {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  background: var(--white);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.pick-person:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow);
+}
+
+.pick-person.is-on {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.pick-log {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.pick-log li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 600;
+  color: var(--ink);
 }

@@ -1,14 +1,8 @@
 import { supabase, makeCode, makeId } from '../online/client.js';
-import { HOT_TAKES_PROMPTS, ROUNDS_TO_PLAY } from '../data/hottakes-prompts.js';
+import { pickTwoPrompts, ROUNDS_TO_PLAY, PICK_SECONDS, DISCUSS_SECONDS } from '../data/blendin-prompts.js';
 import { PFPS, pfpImg, pfpPicker } from '../data/pfps.js';
 
-export const HOTTAKES_SESSION = 'sparkbox.hottakes';
-
-function pickPrompt(names) {
-  const raw = HOT_TAKES_PROMPTS[Math.floor(Math.random() * HOT_TAKES_PROMPTS.length)];
-  const name = names[Math.floor(Math.random() * names.length)] || 'them';
-  return raw.replaceAll('{name}', name);
-}
+export const BLENDIN_SESSION = 'sparkbox.blendin';
 
 function escape(s) {
   return String(s)
@@ -17,20 +11,26 @@ function escape(s) {
     .replace(/"/g, '&quot;');
 }
 
-export function createHotTakes(container, { ui, roster, setResume, setCleanup }) {
+function secondsLeft(deadline) {
+  if (!deadline) return 0;
+  return Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 1000));
+}
+
+export function createBlendIn(container, { ui, roster, setResume, setCleanup }) {
   let me = { id: null, token: null, name: '', avatar: PFPS[0].id };
   let room = null;
   let players = [];
   let round = null;
-  let answers = [];
+  let picks = [];
   let votes = [];
-  let draft = '';
+  let usedCrew = new Set();
   let error = '';
   let joining = false;
   let busy = false;
   let channel = null;
   let refreshing = false;
   let refreshQueued = false;
+  let tick = null;
   let setup = {
     name: roster.names?.find(n => n.trim()) || '',
     code: '',
@@ -42,41 +42,34 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     return room && me.id && room.host_id === me.id;
   }
 
-  function myAnswer() {
-    return answers.find(a => a.player_id === me.id);
+  function totalRounds() {
+    return room?.points_to_win || 5;
+  }
+
+  function iAmImpostor() {
+    return round && me.id && round.impostor_id === me.id;
+  }
+
+  function myPrompt() {
+    if (!round) return '';
+    return iAmImpostor() ? round.impostor_prompt : round.prompt;
+  }
+
+  function myPick() {
+    return picks.find(p => p.player_id === me.id);
   }
 
   function myVote() {
     return votes.find(v => v.voter_id === me.id);
   }
 
-  function othersWriting() {
-    return players.filter(p => !answers.some(a => a.player_id === p.id));
-  }
-
-  function othersVoting() {
-    return players.filter(p => !votes.some(v => v.voter_id === p.id));
-  }
-
-  function totalRounds() {
-    return room?.points_to_win || 5;
-  }
-
-  function voteTally() {
-    const tally = {};
-    for (const v of votes) tally[v.answer_id] = (tally[v.answer_id] || 0) + 1;
-    return tally;
-  }
-
-  function roundWinners(tally) {
-    const top = Math.max(0, ...answers.map(a => tally[a.id] || 0));
-    if (top <= 0) return [];
-    return answers.filter(a => (tally[a.id] || 0) === top);
+  function playerById(id) {
+    return players.find(p => p.id === id);
   }
 
   function saveSession() {
     if (!room || !me.id) return;
-    sessionStorage.setItem(HOTTAKES_SESSION, JSON.stringify({
+    sessionStorage.setItem(BLENDIN_SESSION, JSON.stringify({
       roomId: room.id,
       playerId: me.id,
       token: me.token,
@@ -85,17 +78,33 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     }));
   }
 
+  function stopTick() {
+    if (tick) { clearInterval(tick); tick = null; }
+  }
+
+  function startTick() {
+    stopTick();
+    tick = setInterval(() => {
+      const el = container.querySelector('[data-count]');
+      if (el && round) {
+        const deadline = room.status === 'picking' ? round.pick_deadline : round.discuss_deadline;
+        el.textContent = secondsLeft(deadline);
+      }
+      maybeAdvance();
+    }, 400);
+  }
+
   async function restoreSession() {
     let saved;
     try {
-      saved = JSON.parse(sessionStorage.getItem(HOTTAKES_SESSION) || 'null');
+      saved = JSON.parse(sessionStorage.getItem(BLENDIN_SESSION) || 'null');
     } catch {
       saved = null;
     }
     if (!saved?.roomId || !saved.playerId) return false;
-    const { data: found } = await supabase.from('rooms').select('*').eq('id', saved.roomId).maybeSingle();
+    const { data: found } = await supabase.from('rooms').select('*').eq('id', saved.roomId).eq('game', 'blendin').maybeSingle();
     if (!found) {
-      sessionStorage.removeItem(HOTTAKES_SESSION);
+      sessionStorage.removeItem(BLENDIN_SESSION);
       return false;
     }
     const { data: player } = await supabase
@@ -105,7 +114,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       .eq('token', saved.token)
       .maybeSingle();
     if (!player) {
-      sessionStorage.removeItem(HOTTAKES_SESSION);
+      sessionStorage.removeItem(BLENDIN_SESSION);
       return false;
     }
     me = { id: player.id, token: saved.token, name: player.name, avatar: player.avatar || saved.avatar || PFPS[0].id };
@@ -118,10 +127,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
 
   async function refresh() {
     if (!room) return;
-    if (refreshing) {
-      refreshQueued = true;
-      return;
-    }
+    if (refreshing) { refreshQueued = true; return; }
     refreshing = true;
     try {
       const [{ data: r }, { data: p }] = await Promise.all([
@@ -141,19 +147,20 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
           .maybeSingle();
         round = rnd;
         if (round) {
-          const [{ data: a }, { data: v }] = await Promise.all([
-            supabase.from('answers').select('*').eq('round_id', round.id),
-            supabase.from('votes').select('*').eq('round_id', round.id),
+          usedCrew.add(round.prompt);
+          const [{ data: pk }, { data: v }] = await Promise.all([
+            supabase.from('blend_picks').select('*').eq('round_id', round.id),
+            supabase.from('blend_votes').select('*').eq('round_id', round.id),
           ]);
-          answers = a || [];
+          picks = pk || [];
           votes = v || [];
         } else {
-          answers = [];
+          picks = [];
           votes = [];
         }
       } else {
         round = null;
-        answers = [];
+        picks = [];
         votes = [];
       }
 
@@ -169,23 +176,46 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   }
 
   async function maybeAdvance() {
-    if (!room || players.length < 3) return;
+    if (!room || !round || players.length < 3) return;
 
-    if (room.status === 'writing' && round && answers.length >= players.length) {
-      const { data } = await supabase
-        .from('rooms')
-        .update({ status: 'voting' })
-        .eq('id', room.id)
-        .eq('status', 'writing')
-        .select('id')
-        .maybeSingle();
-      if (data) room = { ...room, status: 'voting' };
+    if (room.status === 'picking') {
+      const timedOut = round.pick_deadline && Date.now() >= new Date(round.pick_deadline).getTime();
+      if (picks.length >= players.length || timedOut) {
+        const discussUntil = new Date(Date.now() + DISCUSS_SECONDS * 1000).toISOString();
+        await supabase.from('rounds').update({ discuss_deadline: discussUntil }).eq('id', round.id).is('discuss_deadline', null);
+        const { data } = await supabase
+          .from('rooms')
+          .update({ status: 'discuss' })
+          .eq('id', room.id)
+          .eq('status', 'picking')
+          .select('id')
+          .maybeSingle();
+        if (data) room = { ...room, status: 'discuss' };
+      }
       return;
     }
 
-    if (room.status === 'voting' && round && votes.length >= players.length) {
-      const tally = voteTally();
-      const winners = roundWinners(tally);
+    if (room.status === 'discuss') {
+      const timedOut = round.discuss_deadline && Date.now() >= new Date(round.discuss_deadline).getTime();
+      if (timedOut) {
+        const { data } = await supabase
+          .from('rooms')
+          .update({ status: 'voting' })
+          .eq('id', room.id)
+          .eq('status', 'discuss')
+          .select('id')
+          .maybeSingle();
+        if (data) room = { ...room, status: 'voting' };
+      }
+      return;
+    }
+
+    if (room.status === 'voting' && votes.length >= players.length) {
+      const tally = {};
+      for (const v of votes) tally[v.suspect_id] = (tally[v.suspect_id] || 0) + 1;
+      const top = Math.max(0, ...Object.values(tally));
+      const accused = Object.keys(tally).filter(id => tally[id] === top);
+      const caught = top > 0 && accused.length === 1 && accused[0] === round.impostor_id;
       const lastRound = room.round >= totalRounds();
       const nextStatus = lastRound ? 'finished' : 'results';
       const { data: claimed } = await supabase
@@ -196,14 +226,21 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
         .select('id')
         .maybeSingle();
       if (!claimed) return;
-
       room = { ...room, status: nextStatus };
-      for (const a of winners) {
-        const pl = players.find(p => p.id === a.player_id);
-        if (!pl) continue;
-        const nextScore = pl.score + 1;
-        await supabase.from('players').update({ score: nextScore }).eq('id', pl.id);
-        pl.score = nextScore;
+      if (caught) {
+        for (const pl of players) {
+          if (pl.id === round.impostor_id) continue;
+          const nextScore = pl.score + 1;
+          await supabase.from('players').update({ score: nextScore }).eq('id', pl.id);
+          pl.score = nextScore;
+        }
+      } else {
+        const imp = players.find(p => p.id === round.impostor_id);
+        if (imp) {
+          const nextScore = imp.score + 1;
+          await supabase.from('players').update({ score: nextScore }).eq('id', imp.id);
+          imp.score = nextScore;
+        }
       }
     }
   }
@@ -211,13 +248,21 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   async function subscribe() {
     if (channel) supabase.removeChannel(channel);
     channel = supabase
-      .channel(`room:${room.id}`)
+      .channel(`blend:${room.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${room.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `room_id=eq.${room.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'rounds', filter: `room_id=eq.${room.id}` }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'answers' }, refresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'blend_picks' }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'blend_votes' }, refresh)
       .subscribe();
+  }
+
+  function sqlHint(detail) {
+    const text = detail || '';
+    if (/does not exist|schema cache|column|blend_/i.test(text)) {
+      return 'Need one more SQL step. In Supabase → SQL Editor, new snippet, paste supabase/blendin.sql, and Run.';
+    }
+    return text;
   }
 
   async function hostRoom() {
@@ -237,7 +282,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
         status: 'lobby',
         round: 0,
         points_to_win: setup.rounds,
-        game: 'hottakes',
+        game: 'blendin',
       }).select().single();
       created = res.data;
       roomErr = res.error;
@@ -245,11 +290,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     }
     if (roomErr || !created) {
       joining = false;
-      const detail = roomErr?.message || 'unknown error';
-      const needsSchema = /does not exist|schema cache|permission denied|row-level security/i.test(detail);
-      error = needsSchema
-        ? 'Could not create a room. In Supabase, open SQL Editor, paste supabase/schema.sql, and Run — then try again.'
-        : `Could not create a room. ${detail}`;
+      error = sqlHint(roomErr?.message);
       render();
       return;
     }
@@ -264,10 +305,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     });
     if (pErr) {
       joining = false;
-      const detail = pErr.message || '';
-      error = /avatar|column/i.test(detail)
-        ? 'Need one more SQL step. In Supabase → SQL Editor, run supabase/add-avatar.sql, then try again.'
-        : detail;
+      error = sqlHint(pErr.message);
       render();
       return;
     }
@@ -286,18 +324,21 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     joining = true;
     error = '';
     render();
-    const { data: found, error: findErr } = await supabase.from('rooms').select('*').eq('code', code).eq('game', 'hottakes').maybeSingle();
+    const { data: found, error: findErr } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', code)
+      .eq('game', 'blendin')
+      .maybeSingle();
     if (findErr || !found) {
       joining = false;
-      error = 'No room with that code. Check it and try again.';
+      error = findErr ? sqlHint(findErr.message) : 'No Blend In room with that code.';
       render();
       return;
     }
     if (found.status !== 'lobby') {
       joining = false;
-      error = found.status === 'finished'
-        ? 'That room already finished.'
-        : 'That room already started. Wait for the next lobby.';
+      error = found.status === 'finished' ? 'That room already finished.' : 'That room already started.';
       render();
       return;
     }
@@ -312,10 +353,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     });
     if (pErr) {
       joining = false;
-      const detail = pErr.message || '';
-      error = /avatar|column/i.test(detail)
-        ? 'Need one more SQL step. In Supabase → SQL Editor, run supabase/add-avatar.sql, then try again.'
-        : detail;
+      error = sqlHint(pErr.message);
       render();
       return;
     }
@@ -344,49 +382,53 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     if (!isHost() || players.length < 3 || busy) return;
     busy = true;
     error = '';
-    const prompt = pickPrompt(players.map(p => p.name));
+    const pair = pickTwoPrompts(usedCrew);
+    const impostor = players[Math.floor(Math.random() * players.length)];
     const next = room.round + 1;
+    const pickUntil = new Date(Date.now() + PICK_SECONDS * 1000).toISOString();
     const { error: rErr } = await supabase.from('rounds').insert({
       room_id: room.id,
       number: next,
-      prompt,
+      prompt: pair.crew,
+      impostor_prompt: pair.impostor,
+      impostor_id: impostor.id,
+      pick_deadline: pickUntil,
     });
     if (rErr) {
       busy = false;
-      error = rErr.message;
+      error = sqlHint(rErr.message);
       render();
       return;
     }
-    await supabase.from('rooms').update({ status: 'writing', round: next }).eq('id', room.id);
+    usedCrew.add(pair.crew);
+    usedCrew.add(pair.impostor);
+    await supabase.from('rooms').update({ status: 'picking', round: next }).eq('id', room.id);
     busy = false;
   }
 
-  async function submitAnswer() {
-    const text = draft.trim();
-    if (!text || !round || myAnswer() || busy) return;
+  async function submitPick(targetId) {
+    if (!round || myPick() || targetId === me.id || busy) return;
     busy = true;
-    const { error: aErr } = await supabase.from('answers').insert({
+    const { error: pErr } = await supabase.from('blend_picks').insert({
       round_id: round.id,
       player_id: me.id,
-      text,
+      target_id: targetId,
     });
     busy = false;
-    if (aErr) { error = aErr.message; render(); return; }
-    draft = '';
+    if (pErr) { error = sqlHint(pErr.message); render(); return; }
     await refresh();
   }
 
-  async function submitVote(answerId) {
-    const mine = myAnswer();
-    if (!round || myVote() || (mine && mine.id === answerId) || busy) return;
+  async function submitVote(suspectId) {
+    if (!round || myVote() || suspectId === me.id || busy) return;
     busy = true;
-    const { error: vErr } = await supabase.from('votes').insert({
+    const { error: vErr } = await supabase.from('blend_votes').insert({
       round_id: round.id,
       voter_id: me.id,
-      answer_id: answerId,
+      suspect_id: suspectId,
     });
     busy = false;
-    if (vErr) { error = vErr.message; render(); return; }
+    if (vErr) { error = sqlHint(vErr.message); render(); return; }
     await refresh();
   }
 
@@ -398,6 +440,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   async function playAgain() {
     if (!isHost() || busy) return;
     busy = true;
+    usedCrew = new Set();
     await supabase.from('players').update({ score: 0 }).eq('room_id', room.id);
     await supabase.from('rooms').update({ status: 'lobby', round: 0 }).eq('id', room.id);
     busy = false;
@@ -405,12 +448,17 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
 
   function render() {
     if (!room) {
+      stopTick();
       renderSetup();
       return;
     }
+    if (room.status === 'picking' || room.status === 'discuss') startTick();
+    else stopTick();
+
     switch (room.status) {
       case 'lobby': renderLobby(); break;
-      case 'writing': renderWrite(); break;
+      case 'picking': renderPick(); break;
+      case 'discuss': renderDiscuss(); break;
       case 'voting': renderVote(); break;
       case 'results':
       case 'finished': renderResults(); break;
@@ -442,13 +490,26 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     `;
   }
 
+  function playerButtons(action, excludeId, mineId) {
+    return `
+      <div class="pick-list">
+        ${players.filter(p => p.id !== excludeId).map(p => `
+          <button type="button" class="pick-person ${mineId === p.id ? 'is-on' : ''}" data-${action}="${p.id}">
+            ${pfpImg(p.avatar)}
+            <span>${escape(p.name)}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+  }
+
   function renderSetup() {
     container.innerHTML = `
-      ${ui.header('Allegedly')}
+      ${ui.header('Blend In')}
       ${ui.howTo([
-        'One person <strong>hosts</strong>. Everyone else joins with the room code on their own phone',
-        'Each round is a prompt about someone in the room. Write the funniest or most true answer in secret',
-        'Vote for the best line. The winner of the vote gets the point. After the rounds you picked, highest score wins',
+        'Everyone gets the <strong>same prompt</strong> except one person — they get a different one, and they know they’re blending in',
+        'On the clock, pick who the prompt is most like. Then talk: why did you pick them?',
+        'Vote for who had the different prompt. Catch them and everyone else scores. Miss them and they score',
       ], roster.howToOpen !== false)}
       ${banner()}
       <div class="panel">
@@ -493,12 +554,12 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
 
   function renderLobby() {
     container.innerHTML = `
-      ${ui.header('Allegedly')}
+      ${ui.header('Blend In')}
       ${banner()}
       <div class="room-code-card">
         <p class="room-code-label">Room code</p>
         <p class="room-code">${escape(room.code)}</p>
-        <p class="helper-text">Others open Sparkbox → Allegedly → type this code</p>
+        <p class="helper-text">Others open Sparkbox → Blend In → type this code</p>
       </div>
       <div class="panel">
         <h2>In the room · ${players.length}</h2>
@@ -526,53 +587,64 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     });
   }
 
-  function renderWrite() {
-    const waiting = othersWriting();
+  function renderPick() {
+    const left = secondsLeft(round?.pick_deadline);
     container.innerHTML = `
-      ${ui.header('Allegedly')}
+      ${ui.header('Blend In')}
       ${banner()}
-      <div class="phase-banner">Round ${room.round} of ${totalRounds()} · write in secret</div>
+      <div class="phase-banner">Round ${room.round} of ${totalRounds()} · <span data-count>${left}</span>s</div>
+      ${iAmImpostor()
+        ? `<div class="blend-secret">You’re blending in. Don’t get clocked.</div>`
+        : ''}
       <div class="panel challenge-panel">
-        <p class="challenge-prompt">${escape(round?.prompt || '…')}</p>
+        <p class="challenge-prompt">${escape(myPrompt() || '…')}</p>
       </div>
-      ${myAnswer()
-        ? `<div class="panel"><p>You’re in. Waiting on ${waiting.length ? waiting.map(p => escape(p.name)).join(', ') : 'the room'}.</p></div>`
-        : `
-          <div class="panel">
-            <div class="form-group" style="margin-bottom:0">
-              <textarea data-draft rows="3" maxlength="140" placeholder="Funniest or most true">${escape(draft)}</textarea>
-            </div>
-          </div>
-          <button class="btn btn-primary" data-action="send">Lock it in</button>
-        `}
+      ${myPick()
+        ? `<div class="panel"><p>Locked in: ${escape(playerById(myPick().target_id)?.name || '?')}. Waiting on the room.</p></div>`
+        : `<p class="hint-text" style="margin-bottom:0.75rem">Who is this most like?</p>
+           ${playerButtons('pick', me.id)}`}
     `;
-    const ta = container.querySelector('[data-draft]');
-    ta?.addEventListener('input', e => { draft = e.target.value; });
-    ta?.focus();
-    container.querySelector('[data-action="send"]')?.addEventListener('click', submitAnswer);
+    container.querySelectorAll('[data-pick]').forEach(el => {
+      el.addEventListener('click', () => submitPick(el.dataset.pick));
+    });
+  }
+
+  function renderDiscuss() {
+    const left = secondsLeft(round?.discuss_deadline);
+    container.innerHTML = `
+      ${ui.header('Blend In')}
+      ${banner()}
+      <div class="phase-banner">Talk it out · <span data-count>${left}</span>s</div>
+      <div class="panel">
+        <p>Someone had a different prompt. Look at who picked who — then argue.</p>
+      </div>
+      <div class="panel">
+        <h2>The picks</h2>
+        <ul class="pick-log">
+          ${picks.map(pk => {
+            const from = playerById(pk.player_id);
+            const to = playerById(pk.target_id);
+            return `<li>
+              ${pfpImg(from?.avatar, 'pfp--sm')}
+              <span><strong>${escape(from?.name || '?')}</strong> pointed at <strong>${escape(to?.name || '?')}</strong></span>
+            </li>`;
+          }).join('') || '<li>Nobody locked a pick in time.</li>'}
+        </ul>
+      </div>
+    `;
   }
 
   function renderVote() {
-    const mine = myAnswer();
-    const shuffled = [...answers].sort((a, b) => a.id.localeCompare(b.id));
     container.innerHTML = `
-      ${ui.header('Allegedly')}
+      ${ui.header('Blend In')}
       ${banner()}
-      <div class="phase-banner">Round ${room.round} of ${totalRounds()} · vote the best</div>
+      <div class="phase-banner">Round ${room.round} of ${totalRounds()} · vote who blended in</div>
       <div class="panel">
-        <p>${escape(round?.prompt || '')}</p>
-        <p class="helper-text">Funniest or most true. You can’t vote for yourself. Votes stay anonymous.</p>
+        <p>Who got the different prompt?</p>
       </div>
       ${myVote()
-        ? `<div class="panel"><p>Vote in. Waiting on ${othersVoting().map(p => escape(p.name)).join(', ') || 'results'}.</p></div>`
-        : `<div class="take-list">
-            ${shuffled.map(a => `
-              <button type="button" class="take-card ${mine && mine.id === a.id ? 'is-mine' : ''}" data-vote="${a.id}" ${mine && mine.id === a.id ? 'disabled' : ''}>
-                <span class="take-card-text">${escape(a.text)}</span>
-                ${mine && mine.id === a.id ? '<span class="take-card-tag">yours</span>' : ''}
-              </button>
-            `).join('')}
-          </div>`}
+        ? `<div class="panel"><p>Vote in. Waiting on ${players.filter(p => !votes.some(v => v.voter_id === p.id)).map(p => escape(p.name)).join(', ') || 'results'}.</p></div>`
+        : playerButtons('vote', me.id)}
     `;
     container.querySelectorAll('[data-vote]').forEach(el => {
       el.addEventListener('click', () => submitVote(el.dataset.vote));
@@ -580,35 +652,37 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   }
 
   function renderResults() {
-    const tally = voteTally();
-    const winners = roundWinners(tally);
-    const winnerNames = winners.map(a => players.find(p => p.id === a.player_id)?.name).filter(Boolean);
-    const ranked = [...answers].sort((a, b) => (tally[b.id] || 0) - (tally[a.id] || 0));
+    const tally = {};
+    for (const v of votes) tally[v.suspect_id] = (tally[v.suspect_id] || 0) + 1;
+    const top = Math.max(0, ...Object.values(tally), 0);
+    const accusedIds = Object.keys(tally).filter(id => tally[id] === top && top > 0);
+    const caught = accusedIds.length === 1 && accusedIds[0] === round?.impostor_id;
+    const impostor = playerById(round?.impostor_id);
     const finished = room.status === 'finished';
-    const winnerLine = !winnerNames.length
-      ? 'No votes in'
-      : winnerNames.length === 1
-        ? `${winnerNames[0]} takes the round`
-        : `${winnerNames.join(' & ')} share the round`;
     container.innerHTML = `
-      ${ui.header('Allegedly')}
+      ${ui.header('Blend In')}
       ${banner()}
       <div class="result-box">
-        <p class="result-title">${finished ? 'That’s the game' : winnerLine}</p>
-        <p class="result-sub">${finished ? winnerLine : `Round ${room.round} of ${totalRounds()}`} · ${escape(round?.prompt || '')}</p>
+        <p class="result-title">${finished ? 'That’s the game' : caught ? 'Caught them' : 'They blended in'}</p>
+        <p class="result-sub">${pfpImg(impostor?.avatar, 'pfp--sm')} ${escape(impostor?.name || '?')} had the odd prompt</p>
       </div>
       <div class="panel">
-        <h2>The lines</h2>
-        <div class="take-list">
-          ${ranked.map(a => {
-            const author = players.find(p => p.id === a.player_id);
-            const n = tally[a.id] || 0;
-            return `<div class="take-card is-result ${winners.some(w => w.id === a.id) ? 'is-winner' : ''}">
-              <span class="take-card-text">${escape(a.text)}</span>
-              <span class="take-card-meta">${pfpImg(author?.avatar, 'pfp--xs')} ${escape(author?.name || '?')} · ${n} vote${n === 1 ? '' : 's'}</span>
-            </div>`;
+        <h2>The prompts</h2>
+        <p><strong>Everyone else:</strong> ${escape(round?.prompt || '')}</p>
+        <p style="margin-top:0.6rem"><strong>Impostor:</strong> ${escape(round?.impostor_prompt || '')}</p>
+      </div>
+      <div class="panel">
+        <h2>The picks</h2>
+        <ul class="pick-log">
+          ${picks.map(pk => {
+            const from = playerById(pk.player_id);
+            const to = playerById(pk.target_id);
+            return `<li>
+              ${pfpImg(from?.avatar, 'pfp--sm')}
+              <span>${escape(from?.name || '?')} → ${escape(to?.name || '?')}</span>
+            </li>`;
           }).join('')}
-        </div>
+        </ul>
       </div>
       ${scoreboard()}
       ${isHost()
@@ -620,7 +694,10 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   }
 
   setResume?.(() => { if (room) refresh(); else render(); });
-  setCleanup?.(() => { if (channel) supabase.removeChannel(channel); });
+  setCleanup?.(() => {
+    stopTick();
+    if (channel) supabase.removeChannel(channel);
+  });
 
   restoreSession().then(ok => { if (!ok) render(); });
 }

@@ -8,6 +8,7 @@ create table if not exists rooms (
   status text not null default 'lobby',
   round int not null default 0,
   points_to_win int not null default 5, -- number of rounds to play
+  game text not null default 'hottakes',
   created_at timestamptz not null default now()
 );
 
@@ -27,6 +28,10 @@ create table if not exists rounds (
   room_id uuid not null references rooms(id) on delete cascade,
   number int not null,
   prompt text not null,
+  impostor_id uuid,
+  impostor_prompt text,
+  pick_deadline timestamptz,
+  discuss_deadline timestamptz,
   created_at timestamptz not null default now()
 );
 

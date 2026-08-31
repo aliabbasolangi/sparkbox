@@ -4,10 +4,12 @@ import { createCallIt } from './games/callit.js';
 import { createImpostor } from './games/impostor.js';
 import { createWaveLength } from './games/wavelength.js';
 import { createHotTakes, HOTTAKES_SESSION } from './games/hottakes.js';
+import { createBlendIn, BLENDIN_SESSION } from './games/blendin.js';
 import { createInstall } from './install.js';
 
 const GAMES = [
   { id: 'hottakes', name: 'Allegedly', icon: '🔥' },
+  { id: 'blendin', name: 'Blend In', icon: '🦎' },
   { id: 'spyplay', name: 'Incognito', icon: '🕵️' },
   { id: 'mafia', name: 'Mafia', icon: '🌙' },
   { id: 'impostor', name: 'Impostor', icon: '🎭' },
@@ -324,6 +326,7 @@ function startFresh(gameId) {
     existing.root.remove();
     parked.delete(gameId);
     if (gameId === 'hottakes') sessionStorage.removeItem(HOTTAKES_SESSION);
+    if (gameId === 'blendin') sessionStorage.removeItem(BLENDIN_SESSION);
   }
   createFresh(gameId);
 }
@@ -351,6 +354,7 @@ function createFresh(gameId) {
 
   switch (gameId) {
     case 'hottakes': createHotTakes(root, ctx); break;
+    case 'blendin': createBlendIn(root, ctx); break;
     case 'spyplay': createSpyfall(root, ctx); break;
     case 'mafia': createMafia(root, ctx); break;
     case 'callit': createCallIt(root, ctx); break;

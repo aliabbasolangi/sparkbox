@@ -63,7 +63,7 @@ export function createCallIt(container, { goHome, ui, roster, setResume }) {
     container.innerHTML = `
       ${ui.header('Call It', goHome)}
       ${ui.howTo([
-        'Two teams bid in person — "I can name 5…" "I can name 8…" until someone <strong>calls it</strong>',
+        'Two teams bid in person: "I can name 5…" "I can name 8…" until someone <strong>calls it</strong>',
         'The challenged player must name that many items in 30 seconds',
         'Make it → their team gets 1 point. Fail → other team gets 1 point',
       ], roster.howToOpen !== false)}
@@ -184,7 +184,7 @@ export function createCallIt(container, { goHome, ui, roster, setResume }) {
       <div class="panel">
         <p>Use this genre for the round. Each team picks one person to represent them, then start bidding in person.</p>
       </div>
-      <button class="btn btn-primary" data-action="next">Reps chosen — start bidding</button>
+      <button class="btn btn-primary" data-action="next">Reps chosen. Start bidding</button>
     `;
     container.querySelector('[data-action="next"]')?.addEventListener('click', () => {
       state.phase = 'bid';
@@ -200,7 +200,7 @@ export function createCallIt(container, { goHome, ui, roster, setResume }) {
       <div class="panel">
         <h2>Bid in person</h2>
         <p>Reps take turns: <em>"I can name 4"</em> → <em>"I can name 6"</em> → until someone <strong>calls it</strong> and says the other can't do it.</p>
-        <p class="helper-text" style="margin-top:0.75rem">Genre: <strong>${g.name}</strong> — ${g.item}</p>
+        <p class="helper-text" style="margin-top:0.75rem">Genre: <strong>${g.name}</strong>. ${g.item}</p>
       </div>
       <div class="panel">
         <h2>When bidding is done</h2>
@@ -273,10 +273,10 @@ export function createCallIt(container, { goHome, ui, roster, setResume }) {
       ${ui.header('Call It', goHome)}
       <div class="panel challenge-panel" style="text-align:center">
         <p class="challenge-prompt">${state.targetCount} × ${g.item}</p>
-        <p class="helper-text">${teamName(state.challengedTeam)} — go!</p>
+        <p class="helper-text">${teamName(state.challengedTeam)}, go!</p>
       </div>
       ${ui.timer(state.timeLeft, state.nameSeconds)}
-      <button class="btn btn-primary" data-action="done">Time's up — score it</button>
+      <button class="btn btn-primary" data-action="done">Time's up. Score it</button>
     `;
 
     ui.startTimer(state, () => renderTimer(), () => {
@@ -303,8 +303,8 @@ export function createCallIt(container, { goHome, ui, roster, setResume }) {
         <h2>Did they make it?</h2>
         <p><strong>${challenged}</strong> had to name <strong>${state.targetCount}</strong> ${g.item} (${g.name}).</p>
       </div>
-      <button class="btn btn-primary" data-action="success">${challenged} got it — +1 point</button>
-      <button class="btn btn-secondary" data-action="fail">${challenged} failed — ${other} +1 point</button>
+      <button class="btn btn-primary" data-action="success">${challenged} got it. +1 point</button>
+      <button class="btn btn-secondary" data-action="fail">${challenged} failed. ${other} +1 point</button>
     `;
 
     container.querySelector('[data-action="success"]')?.addEventListener('click', () => {

@@ -1,61 +1,54 @@
 # Sparkbox
 
-Pass-and-play party games: **Incognito**, **Mafia**, **Impostor**, **Call It**, and **Read the Room**.
+Party games for a room full of people. [sparkbox.lol](https://sparkbox.lol)
 
-Static HTML, CSS, and JavaScript — no build step required.
+Allegedly and Blend In run on everyone's phones (one person hosts, everyone else types a code). Incognito, Mafia, Impostor, Call It and Read the Room are pass-and-play on one device.
 
-## Deploy on Vercel
+Vanilla HTML, CSS and JS. No build step. Hosted on Vercel. Online rooms use Supabase.
 
-### Option A — GitHub (recommended)
+![Sparkbox home](docs/home.png)
 
-1. Install [Git](https://git-scm.com/) if needed, then push this folder to a GitHub repo:
+## Games
 
-   ```bash
-   cd sparkbox
-   git init
-   git add .
-   git commit -m "Initial Sparkbox release"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/sparkbox.git
-   git push -u origin main
-   ```
+**Phones**
 
-2. Go to [vercel.com/new](https://vercel.com/new) and import the repo.
+- **Allegedly:** a prompt about someone in the room. Secret answers, then vote for the one that lands.
+- **Blend In:** same prompt for everyone except one person. Point, discuss, vote who had the odd one.
 
-3. Use these project settings:
+**One device**
 
-   | Setting | Value |
-   |---------|-------|
-   | Framework Preset | **Other** |
-   | Root Directory | `.` (leave default) |
-   | Build Command | *(empty)* |
-   | Output Directory | `.` |
-   | Install Command | *(empty)* |
+- **Incognito:** find the spy who doesn't know the location
+- **Mafia:** town vs mafia
+- **Impostor:** one word a turn, spot who doesn't know it
+- **Call It:** two teams bid, then name that many things under the clock
+- **Read the Room:** one person sits out; guess the number from three answers
 
-4. Click **Deploy**. Vercel will serve `index.html` at your project URL.
+## Code
 
-The `mobile-app/` folder is excluded from uploads via `.vercelignore` and is not part of the web deployment.
-
-### Option B — Vercel CLI
-
-```bash
-cd sparkbox
-npx vercel
+```
+index.html          home screen
+js/app.js           routing, parked games, shared names
+js/games/           one module per game
+js/online/          supabase client (publishable key)
+js/data/            prompts, words, locations, pfps
+css/styles.css
+supabase/           tables, rls, realtime
 ```
 
-Follow the prompts. For production:
+Switching games parks the round instead of throwing it away, so you can come back mid-game. Names carry over for the session on the pass-and-play ones.
 
-```bash
-npx vercel --prod
+`points_to_win` on a room is how many rounds you play, not first-to-N.
+
+## Database
+
+SQL is in `supabase/`. `schema.sql` is the base; `add-avatar.sql` and `blendin.sql` are later migrations. RLS is on. Rooms older than 12 hours drop out of the select policy.
+
+## Local
+
+Needs a static server because of ES modules (opening the html file directly won't work):
+
 ```
-
-## Local development
-
-```bash
-cd sparkbox
 python -m http.server 8080 --bind 127.0.0.1
 ```
 
-Open [http://127.0.0.1:8080](http://127.0.0.1:8080).
-
-> ES modules require a local server — opening `index.html` directly from the filesystem will not work.
+Then [http://127.0.0.1:8080](http://127.0.0.1:8080)

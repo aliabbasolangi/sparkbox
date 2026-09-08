@@ -507,7 +507,7 @@ export function createBlendIn(container, { ui, roster, setResume, setCleanup }) 
     container.innerHTML = `
       ${ui.header('Blend In')}
       ${ui.howTo([
-        'Everyone gets the <strong>same prompt</strong> except one person — they get a different one, and they know they’re blending in',
+        'Everyone gets the <strong>same prompt</strong> except one person. They get a different one, and they know they’re blending in',
         'On the clock, pick who the prompt is most like. Then talk: why did you pick them?',
         'Vote for who had the different prompt. Catch them and everyone else scores. Miss them and they score',
       ], roster.howToOpen !== false)}
@@ -616,7 +616,7 @@ export function createBlendIn(container, { ui, roster, setResume, setCleanup }) 
       ${banner()}
       <div class="phase-banner">Talk it out · <span data-count>${left}</span>s</div>
       <div class="panel">
-        <p>Someone had a different prompt. Look at who picked who — then argue.</p>
+        <p>Someone had a different prompt. Look at who picked who, then argue.</p>
       </div>
       <div class="panel">
         <h2>The picks</h2>

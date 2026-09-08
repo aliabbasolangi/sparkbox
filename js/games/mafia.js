@@ -34,20 +34,20 @@ function buildDawnStory({ victim, round }) {
   if (victim) {
     return pickRandom([
       `Night ${round}: when the sun rose, <strong>${victim}</strong> was found dead.`,
-      `Dawn broke over a quieter town — <strong>${victim}</strong> didn't make it through the night.`,
+      `Dawn broke over a quieter town. <strong>${victim}</strong> didn't make it through the night.`,
       `Someone didn't wake up. <strong>${victim}</strong> was killed while the town slept.`,
     ]);
   }
   return pickRandom([
     `Everyone survived the night. The Mafia are still hiding among you.`,
-    `No one was killed. A peaceful dawn — but don't drop your guard.`,
+    `No one was killed. A peaceful dawn, but don't drop your guard.`,
     `The town awoke intact. Who can you really trust?`,
   ]);
 }
 
 function buildDayStory(votedOut, role) {
   return pickRandom([
-    `The town voted out <strong>${votedOut}</strong> — they were the <strong>${role}</strong>.`,
+    `The town voted out <strong>${votedOut}</strong>. They were the <strong>${role}</strong>.`,
     `<strong>${votedOut}</strong> was eliminated. Their role: <strong>${role}</strong>.`,
   ]);
 }
@@ -117,14 +117,14 @@ export function createMafia(container, { goHome, ui, roster, setResume }) {
       ${ui.header('Mafia', goHome)}
       ${ui.howTo(state.killsEnabled
         ? [
-          '<strong>Mafia</strong> — kill one person each night. Win when Mafia ≥ everyone else alive.',
-          '<strong>Civilian</strong> — no powers. Sus, debate, vote out the Mafia.',
-          '<strong>Doctor</strong> — save one person each night (blind). Self-save only once. Saving Mafia does nothing.',
-          '<strong>Grandfather</strong> — check if someone is Civilian or Mafia (not their special role).',
+          '<strong>Mafia</strong>: kill one person each night. Win when Mafia ≥ everyone else alive.',
+          '<strong>Civilian</strong>: no powers. Sus, debate, vote out the Mafia.',
+          '<strong>Doctor</strong>: save one person each night (blind). Self-save only once. Saving Mafia does nothing.',
+          '<strong>Grandfather</strong>: check if someone is Civilian or Mafia (not their special role).',
         ]
         : [
-          '<strong>Mafia</strong> — no night kills. Blend in. Win when Mafia ≥ everyone else alive.',
-          '<strong>Civilian</strong> — no powers. Sus, debate, vote out the Mafia.',
+          '<strong>Mafia</strong>: no night kills. Blend in. Win when Mafia ≥ everyone else alive.',
+          '<strong>Civilian</strong>: no powers. Sus, debate, vote out the Mafia.',
           'This mode is vote-only. Nobody dies at night, so there is no Doctor.',
         ], roster.howToOpen !== false)}
       <div class="panel">
@@ -145,7 +145,7 @@ export function createMafia(container, { goHome, ui, roster, setResume }) {
           </div>
           <p class="helper-text">${state.killsEnabled
             ? 'Mafia kill one person each night. Doctor can save.'
-            : 'Nobody dies at night. Pure sus — discuss and vote people out. Doctor is not used.'}</p>
+            : 'Nobody dies at night. Pure sus. Discuss and vote people out. Doctor is not used.'}</p>
         </div>
         <div class="form-group">
           <label>Special roles</label>
@@ -258,10 +258,10 @@ export function createMafia(container, { goHome, ui, roster, setResume }) {
         : 'No night kills this game. Blend in, steer the vote, and win when Mafia equals or outnumber everyone else.',
       Civilian: 'No night powers. Sus people out, survive, and vote to eliminate the Mafia.',
       Doctor: state.killsEnabled
-        ? 'Each night, blindly save one person. You don\'t know who Mafia targets. Self-save only once — saving Mafia has no effect.'
+        ? 'Each night, blindly save one person. You don\'t know who Mafia targets. Self-save only once. Saving Mafia has no effect.'
         : 'Night saves are off this game. Help the town vote out the Mafia.',
       Grandfather: state.killsEnabled
-        ? 'Each night, inspect one player. You learn only if they are Civilian or Mafia — not Doctor or other roles.'
+        ? 'Each night, inspect one player. You learn only if they are Civilian or Mafia, not Doctor or other roles.'
         : 'Night inspects are off this game. Help the town vote out the Mafia.',
     };
     return desc[role];
@@ -354,7 +354,7 @@ export function createMafia(container, { goHome, ui, roster, setResume }) {
       ${ui.header('Mafia', goHome)}
       <div class="phase-banner night">Night ${state.round}</div>
       <div class="panel">
-        <p>Everyone close your eyes. Pass the phone to each player in turn — same as role reveal.</p>
+        <p>Everyone close your eyes. Pass the phone to each player in turn, same as role reveal.</p>
       </div>
       <button class="btn btn-primary" data-action="start-night">Begin</button>
     `;
@@ -485,7 +485,7 @@ export function createMafia(container, { goHome, ui, roster, setResume }) {
         ${ui.header('Mafia', goHome)}
         <div class="phase-banner night">Night ${state.round}</div>
         <div class="panel">
-          <p>Blind save — pick someone to protect. You don't know who Mafia is targeting.</p>
+          <p>Blind save: pick someone to protect. You don't know who Mafia is targeting.</p>
           <p class="helper-text">${selfNote} Saving a Mafia member has no effect.</p>
         </div>
         <ul class="player-list">
@@ -504,7 +504,7 @@ export function createMafia(container, { goHome, ui, roster, setResume }) {
       container.innerHTML = `
         ${ui.header('Mafia', goHome)}
         <div class="phase-banner night">Night ${state.round}</div>
-        <div class="panel"><p>Inspect one player — you'll learn if they are <strong>Civilian</strong> or <strong>Mafia</strong> only.</p></div>
+        <div class="panel"><p>Inspect one player. You'll learn if they are <strong>Civilian</strong> or <strong>Mafia</strong> only.</p></div>
         <ul class="player-list">
           ${alivePlayers().filter(p => p.name !== player.name).map(p => `
             <li class="player-item" data-target="${p.name}">${p.name}</li>
@@ -565,7 +565,7 @@ export function createMafia(container, { goHome, ui, roster, setResume }) {
   function renderDay() {
     container.innerHTML = `
       ${ui.header('Mafia', goHome)}
-      <div class="phase-banner day">Day ${state.round} — Discussion</div>
+      <div class="phase-banner day">Day ${state.round}: Discussion</div>
       <div class="panel">
         <h2>Alive</h2>
         <ul class="player-list">
@@ -635,7 +635,7 @@ export function createMafia(container, { goHome, ui, roster, setResume }) {
         <ul class="player-list">
           ${state.players.map(p => `
             <li class="player-item" style="pointer-events:none;${p.alive ? '' : 'opacity:0.5'}">
-              ${p.name} — ${p.role} ${p.alive ? '✓' : '✗'}
+              ${p.name}: ${p.role} ${p.alive ? '✓' : '✗'}
             </li>
           `).join('')}
         </ul>

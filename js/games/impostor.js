@@ -45,8 +45,8 @@ export function createImpostor(container, { goHome, ui, roster, setResume }) {
       ${ui.header('Impostor', goHome)}
       ${ui.howTo([
         state.hintsEnabled
-          ? 'Everyone gets the secret word — except one <strong>Impostor</strong> who only gets a hint'
-          : 'Everyone gets the secret word — except one <strong>Impostor</strong> who gets nothing',
+          ? 'Everyone gets the secret word, except one <strong>Impostor</strong> who only gets a hint'
+          : 'Everyone gets the secret word, except one <strong>Impostor</strong> who gets nothing',
         'Take turns saying <strong>one word</strong> related to the word to prove you\'re legit',
         'Debate in person, vote out the Impostor, or reveal when ready',
       ], roster.howToOpen !== false)}
@@ -82,7 +82,7 @@ export function createImpostor(container, { goHome, ui, roster, setResume }) {
           </div>
           <p class="helper-text">${state.hintsEnabled
             ? 'The Impostor sees a hint word. Everyone else sees the secret word.'
-            : 'The Impostor only knows they are the Impostor — no hint word.'}</p>
+            : 'The Impostor only knows they are the Impostor, with no hint word.'}</p>
         </div>
         <div class="form-group">
           <label>Discussion timer</label>
@@ -185,7 +185,7 @@ export function createImpostor(container, { goHome, ui, roster, setResume }) {
                    <p class="reveal-detail">Your hint word only. Listen to others, say one related word on your turn, and don't get caught.</p>`
                 : `<p class="reveal-detail">You don't get the word or a hint. Listen hard, say one word on your turn, and don't get caught.</p>`)
               : `<p class="word-reveal">${state.wordEntry.word}</p>
-                 <p class="reveal-detail">Genre: <strong>${state.wordEntry.genre}</strong><br>On your turn, say one word that fits — help spot who doesn't know the word.</p>`}
+                 <p class="reveal-detail">Genre: <strong>${state.wordEntry.genre}</strong><br>On your turn, say one word that fits, to help spot who doesn't know the word.</p>`}
           </div>
           <button class="btn btn-primary" data-action="next">
             ${state.currentPlayer < state.playerCount - 1 ? 'Pass to next player' : 'Start discussion'}

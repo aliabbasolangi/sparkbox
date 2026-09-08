@@ -60,9 +60,9 @@ export function createSpyfall(container, { goHome, ui, roster, setResume }) {
     container.innerHTML = `
       ${ui.header('Incognito', goHome)}
       ${ui.howTo([
-        'Everyone gets a location — except one spy who knows nothing',
+        'Everyone gets a location, except one spy who knows nothing',
         'The spy blends in. Ask questions, then vote someone out in person',
-        'If you vote out anyone else, the spy wins. If you vote the spy, they guess the location out loud — right they win, wrong they lose',
+        'If you vote out anyone else, the spy wins. If you vote the spy, they guess the location out loud. Right they win, wrong they lose',
       ], roster.howToOpen !== false)}
       <div class="panel">
         <h2>Players</h2>
@@ -105,7 +105,7 @@ export function createSpyfall(container, { goHome, ui, roster, setResume }) {
           </div>
           <p class="helper-text">${state.rolesEnabled
             ? 'Each innocent also gets a role at the location (e.g. Bartender, Pilot).'
-            : 'Innocents only see the location — no individual roles.'}</p>
+            : 'Innocents only see the location, not individual roles.'}</p>
         </div>
       </div>
       <button class="btn btn-primary" data-action="start">Launch mission</button>
@@ -278,7 +278,7 @@ export function createSpyfall(container, { goHome, ui, roster, setResume }) {
         <ul class="player-list">
           ${state.playerNames.map((name, i) => `
             <li class="player-item" style="pointer-events:none">
-              ${playerName(i)} — ${roleDisplay(name, i)}
+              ${playerName(i)}: ${roleDisplay(name, i)}
             </li>
           `).join('')}
         </ul>

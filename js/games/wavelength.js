@@ -24,7 +24,7 @@ function closenessCopy(diff) {
   if (diff === 0) return { title: 'Nailed it', sub: 'Exact hit. That was a 10/10 read.' };
   if (diff === 1) return { title: 'So close', sub: 'Off by 1. Almost read the room.' };
   if (diff === 2) return { title: 'In the neighborhood', sub: 'Off by 2. The vibe was close, the number wasn’t.' };
-  if (diff === 3) return { title: 'Somewhere nearby', sub: 'Off by 3. They heard you — just not clearly.' };
+  if (diff === 3) return { title: 'Somewhere nearby', sub: 'Off by 3. They heard you, just not clearly.' };
   return { title: 'Way off', sub: `Off by ${diff}. Different planet.` };
 }
 
@@ -61,7 +61,7 @@ export function createWaveLength(container, { goHome, ui, roster, setResume }) {
       ${ui.header('Read the Room', goHome)}
       ${ui.howTo([
         'One player sits out. Everyone else looks at <strong>one shared number</strong> (1–10)',
-        'Bring them back. They ask <strong>3 questions</strong> — the team answers as that number out of 10',
+        'Bring them back. They ask <strong>3 questions</strong>. The team answers as that number out of 10',
         'Example: number is 10, question is “name a food?” → they name a 10/10 food',
         'After three questions, the sit-out player locks in a number. See how close they were',
       ], roster.howToOpen !== false)}
@@ -74,7 +74,7 @@ export function createWaveLength(container, { goHome, ui, roster, setResume }) {
             <span class="stepper-value">${state.playerCount}</span>
             <button class="btn-stepper" data-action="inc-players">+</button>
           </div>
-          <p class="helper-text">Need at least 3 — one sits out, the rest share the number.</p>
+          <p class="helper-text">Need at least 3: one sits out, the rest share the number.</p>
         </div>
         <div class="form-group">
           <label>Player names</label>
@@ -165,10 +165,10 @@ export function createWaveLength(container, { goHome, ui, roster, setResume }) {
         <p class="pass-label">Get them out of earshot</p>
         <p class="pass-player">${sitOutName()}</p>
         <div class="panel">
-          <p><strong>${sitOutName()}</strong> sits this one out. Send them out of the room — no peeking, no listening.</p>
+          <p><strong>${sitOutName()}</strong> sits this one out. Send them out of the room. No peeking, no listening.</p>
           <p class="helper-text" style="margin-top:0.75rem">Everyone else stays. You’ll all see the number on the next screen together.</p>
         </div>
-        <button class="btn btn-primary" data-action="gone">They're gone — show the number</button>
+        <button class="btn btn-primary" data-action="gone">They're gone. Show the number</button>
       </div>
     `;
     container.querySelector('[data-action="gone"]')?.addEventListener('click', (e) => {
@@ -182,7 +182,7 @@ export function createWaveLength(container, { goHome, ui, roster, setResume }) {
     const team = teamNames().join(', ');
     container.innerHTML = `
       ${ui.header('Read the Room', goHome)}
-      <div class="phase-banner">Team only — hide this from ${sitOutName()}</div>
+      <div class="phase-banner">Team only. Hide this from ${sitOutName()}</div>
       <div class="wave-number-card">
         <p class="wave-number-label">Your number</p>
         <p class="wave-number">${state.number}</p>
@@ -209,9 +209,9 @@ export function createWaveLength(container, { goHome, ui, roster, setResume }) {
         <p class="pass-label">Number is hidden</p>
         <p class="pass-player">Bring ${sitOutName()} back</p>
         <div class="panel">
-          <p>The number is off the screen. Call <strong>${sitOutName()}</strong> back in. They’ll ask three questions — then lock in a guess.</p>
+          <p>The number is off the screen. Call <strong>${sitOutName()}</strong> back in. They’ll ask three questions, then lock in a guess.</p>
         </div>
-        <button type="button" class="btn btn-primary" data-action="start-questions">They're back — start questions</button>
+        <button type="button" class="btn btn-primary" data-action="start-questions">They're back. Start questions</button>
       </div>
     `;
     container.querySelector('[data-action="start-questions"]')?.addEventListener('click', (e) => {
@@ -230,7 +230,7 @@ export function createWaveLength(container, { goHome, ui, roster, setResume }) {
       <div class="phase-banner">Question ${n} of 3</div>
       <div class="panel">
         <h2>${sitOutName()} asks</h2>
-        <p>Ask anything. The team answers out loud as their number out of 10 — don’t say the number.</p>
+        <p>Ask anything. The team answers out loud as their number out of 10. Don’t say the number.</p>
         <p class="helper-text" style="margin-top:0.75rem">Need an idea? Try: <strong>${state.idea}</strong></p>
       </div>
       <div class="wave-dots" aria-hidden="true">

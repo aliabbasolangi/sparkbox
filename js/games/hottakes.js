@@ -248,7 +248,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       const detail = roomErr?.message || 'unknown error';
       const needsSchema = /does not exist|schema cache|permission denied|row-level security/i.test(detail);
       error = needsSchema
-        ? 'Could not create a room. In Supabase, open SQL Editor, paste supabase/schema.sql, and Run — then try again.'
+        ? 'Could not create a room. In Supabase, open SQL Editor, paste supabase/schema.sql, and Run, then try again.'
         : `Could not create a room. ${detail}`;
       render();
       return;

@@ -17,7 +17,7 @@ const GAMES = [
   { id: 'wavelength', name: 'Read the Room', icon: '📡' },
 ];
 
-/* ─── Shared roster (names persist across games this session) ─── */
+/* names stick around if you jump between games */
 const roster = {
   names: [],
   count: null,
@@ -69,7 +69,7 @@ const roster = {
   },
 };
 
-/* ─── Shared UI helpers ─── */
+/* header / howto / timer */
 let timerInterval = null;
 
 const ui = {
@@ -151,7 +151,7 @@ const ui = {
   },
 };
 
-/* ─── Overlays ─── */
+/* leave, resume, switch */
 const modalRoot = document.getElementById('modal-root');
 
 function hideModal() {
@@ -169,7 +169,7 @@ function confirmLeaveHome() {
     <div class="sheet" role="dialog" aria-labelledby="leave-title" aria-modal="true">
       <p class="sheet-kicker">Hold up</p>
       <h2 id="leave-title" class="sheet-title">Leave this game?</h2>
-      <p class="sheet-copy">You'll go back to the home screen. A live round stays parked — you can carry on or start fresh when you come back.</p>
+      <p class="sheet-copy">You'll go back to the home screen. A live round stays parked, so you can carry on or start fresh when you come back.</p>
       <div class="sheet-actions">
         <button class="btn btn-secondary" data-modal="stay">Stay</button>
         <button class="btn btn-danger" data-modal="leave">Leave</button>
@@ -197,7 +197,7 @@ function openGameSwitcher() {
     <div class="sheet" role="dialog" aria-labelledby="switch-title" aria-modal="true">
       <p class="sheet-kicker">Jump to</p>
       <h2 id="switch-title" class="sheet-title">Switch game</h2>
-      <p class="sheet-copy">Names carry over. A live round stays parked — you'll choose to carry on or start fresh.</p>
+      <p class="sheet-copy">Names carry over. A live round stays parked, so you'll choose to carry on or start fresh.</p>
       <div class="switch-list">
         ${GAMES.map(g => {
           const parkedHere = parked.has(g.id) && g.id !== currentGameId;
@@ -249,7 +249,7 @@ modalRoot.addEventListener('click', e => {
   }
 });
 
-/* ─── Router (parked games stay alive when switching) ─── */
+/* park the current game instead of killing it */
 const homeScreen = document.getElementById('screen-home');
 const gameScreen = document.getElementById('screen-game');
 const parked = new Map();
@@ -388,7 +388,6 @@ function launchGame(gameId) {
   createFresh(gameId);
 }
 
-/* ─── Init ─── */
 document.querySelectorAll('[data-game]').forEach(card => {
   card.addEventListener('click', () => launchGame(card.dataset.game));
 });

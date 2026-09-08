@@ -1,2 +1,2 @@
--- Run once in Supabase → SQL Editor so Allegedly can save profile pictures.
+-- player avatar id (matches images/pfps)
 alter table players add column if not exists avatar text;

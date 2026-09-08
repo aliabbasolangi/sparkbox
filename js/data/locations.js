@@ -73,7 +73,7 @@ export const SCENE_PACKS = [
   },
 ];
 
-/** @deprecated use SCENE_PACKS — kept for any legacy imports */
+// flat list if something still imports LOCATIONS; packs are the real source
 export const LOCATIONS = SCENE_PACKS.flatMap(pack => pack.locations);
 
 export function getPackById(id) {

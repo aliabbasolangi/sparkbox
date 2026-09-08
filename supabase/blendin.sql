@@ -1,5 +1,4 @@
--- New snippet in Supabase → SQL Editor → Run once.
--- Lets Blend In share rooms with Allegedly, plus picks and accusation votes.
+-- Blend In: rooms.game, odd-one-out picks, accusation votes.
 
 alter table rooms add column if not exists game text not null default 'hottakes';
 

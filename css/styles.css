@@ -1,4 +1,4 @@
-/* ─── Sparkbox · Logo theme ─── */
+/* palette / type */
 :root {
   --cyan: #29B6F6;
   --cyan-deep: #1E9ED9;
@@ -36,7 +36,7 @@ body {
   position: relative;
 }
 
-/* Soft background shapes */
+/* background */
 .bg-shapes {
   position: fixed;
   inset: 0;
@@ -102,7 +102,7 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Home ─── */
+/* home */
 .home-topbar {
   display: flex;
   justify-content: center;
@@ -450,7 +450,7 @@ body {
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* ─── Shared game UI ─── */
+/* in-game chrome */
 .game-header {
   display: flex;
   align-items: center;
@@ -498,7 +498,7 @@ body {
   text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.12);
 }
 
-/* ─── Confirm / switcher overlays ─── */
+/* confirm / switcher */
 .modal-root {
   position: fixed;
   inset: 0;
@@ -1169,7 +1169,7 @@ select:focus, input:focus {
   color: var(--ink);
 }
 
-/* Call It — teams */
+/* Call It teams */
 .team-scoreboard {
   display: flex;
   align-items: center;
@@ -1702,4 +1702,111 @@ button.take-card:hover:not(:disabled) {
   gap: 0.55rem;
   font-weight: 600;
   color: var(--ink);
+}
+
+@media (min-width: 960px) {
+  #app {
+    max-width: 1080px;
+    padding: 2.25rem 2.75rem 3.25rem;
+  }
+
+  .home-topbar {
+    padding: 0.4rem 0 1.6rem;
+  }
+
+  .wordmark-logo--compact {
+    width: 168px;
+    max-width: 168px;
+  }
+
+  .section-label {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-label--follow {
+    margin-top: 2rem;
+  }
+
+  .phone-grid {
+    gap: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .poster {
+    min-height: 292px;
+    padding: 1.35rem 1.45rem 1.3rem;
+    border-radius: 24px;
+    border-left-width: 10px;
+  }
+
+  .poster-kicker { font-size: 0.78rem; }
+  .poster-icon { font-size: 2.45rem; margin: 0.45rem 0 0.15rem; }
+  .poster-name { font-size: 1.9rem; }
+  .poster-desc {
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+  .poster .game-meta { font-size: 0.85rem; margin-top: 0.7rem; }
+  .poster-go { font-size: 1.12rem; padding-top: 0.85rem; }
+
+  .tile-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.9rem;
+  }
+
+  .tile {
+    min-height: 188px;
+    padding: 1.1rem 1.05rem 1rem;
+    border-radius: 18px;
+  }
+
+  .tile-icon { font-size: 1.9rem; }
+  .tile-name { font-size: 1.2rem; margin-top: 0.5rem; }
+  .tile-desc { font-size: 0.82rem; }
+  .tile .game-meta { font-size: 0.75rem; }
+
+  #screen-game.active {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .game-title { font-size: 1.75rem; }
+
+  .btn-back,
+  .btn-switch {
+    width: 48px;
+    height: 48px;
+  }
+
+  .modal-root {
+    align-items: center;
+    padding: 2rem;
+  }
+
+  .sheet {
+    max-width: 440px;
+  }
+
+  .switch-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+  }
+
+  .room-code {
+    font-size: 3.5rem;
+  }
+
+  .pass-player { font-size: 2.4rem; }
+
+  .float-emoji { opacity: 0.28; }
+}
+
+@media (hover: hover) and (min-width: 960px) {
+  .poster:hover,
+  .tile:hover {
+    transform: translate(-3px, -3px);
+  }
 }

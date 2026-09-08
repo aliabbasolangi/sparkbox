@@ -25,7 +25,7 @@ export function createInstall(container, { ui }) {
     </div>
     <div class="panel">
       <h2>iOS app</h2>
-      <p>A native iPhone app is coming soon. Until then, Add to Home Screen is the closest thing — it opens full screen like an app.</p>
+      <p>A native iPhone app is coming soon. Until then, Add to Home Screen is the closest thing. It opens full screen like an app.</p>
       <p class="install-soon">iOS app coming soon</p>
     </div>
   `;

@@ -507,8 +507,8 @@ export function createBlendIn(container, { ui, roster, setResume, setCleanup }) 
     container.innerHTML = `
       ${ui.header('Blend In')}
       ${ui.howTo([
-        'Everyone gets the <strong>same prompt</strong> except one person. They get a different one, and they know they’re blending in',
-        'On the clock, pick who the prompt is most like. Then talk: why did you pick them?',
+        'Everyone gets a prompt and picks who in the room it fits best. One person secretly receives a different prompt',
+        'Once everyone has picked, the main prompt appears on every phone. Compare the picks and work out who answered something different',
         'Vote for who had the different prompt. Catch them and everyone else scores. Miss them and they score',
       ], roster.howToOpen !== false)}
       ${banner()}
@@ -593,9 +593,6 @@ export function createBlendIn(container, { ui, roster, setResume, setCleanup }) 
       ${ui.header('Blend In')}
       ${banner()}
       <div class="phase-banner">Round ${room.round} of ${totalRounds()} · <span data-count>${left}</span>s</div>
-      ${iAmImpostor()
-        ? `<div class="blend-secret">You’re blending in. Don’t get clocked.</div>`
-        : ''}
       <div class="panel challenge-panel">
         <p class="challenge-prompt">${escape(myPrompt() || '…')}</p>
       </div>
@@ -615,8 +612,10 @@ export function createBlendIn(container, { ui, roster, setResume, setCleanup }) 
       ${ui.header('Blend In')}
       ${banner()}
       <div class="phase-banner">Talk it out · <span data-count>${left}</span>s</div>
-      <div class="panel">
-        <p>Someone had a different prompt. Look at who picked who, then argue.</p>
+      <div class="panel challenge-panel">
+        <h2>The main prompt</h2>
+        <p class="challenge-prompt">${escape(round?.prompt || '…')}</p>
+        <p class="helper-text">Someone saw something different. Compare the picks and work out who it was.</p>
       </div>
       <div class="panel">
         <h2>The picks</h2>

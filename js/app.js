@@ -7,6 +7,8 @@ import { createHotTakes, HOTTAKES_SESSION } from './games/hottakes.js';
 import { createBlendIn, BLENDIN_SESSION } from './games/blendin.js';
 import { createInstall } from './install.js';
 
+const ONLINE = new Set(['hottakes', 'blendin']);
+
 const GAMES = [
   { id: 'hottakes', name: 'Allegedly', icon: '🔥' },
   { id: 'blendin', name: 'Blend In', icon: '🦎' },
@@ -165,11 +167,15 @@ function showModal(html) {
 }
 
 function confirmLeaveHome() {
+  const online = ONLINE.has(currentGameId);
+  const copy = online
+    ? 'You will leave this room and go home. You cannot carry on from this phone. If the others vote to wait, rejoin with the room code and the same name.'
+    : 'You will go back to the home screen. A live round stays parked, so you can carry on or start fresh when you come back.';
   showModal(`
     <div class="sheet" role="dialog" aria-labelledby="leave-title" aria-modal="true">
       <p class="sheet-kicker">Hold up</p>
       <h2 id="leave-title" class="sheet-title">Leave this game?</h2>
-      <p class="sheet-copy">You'll go back to the home screen. A live round stays parked, so you can carry on or start fresh when you come back.</p>
+      <p class="sheet-copy">${copy}</p>
       <div class="sheet-actions">
         <button class="btn btn-secondary" data-modal="stay">Stay</button>
         <button class="btn btn-danger" data-modal="leave">Leave</button>
@@ -197,7 +203,9 @@ function openGameSwitcher() {
     <div class="sheet" role="dialog" aria-labelledby="switch-title" aria-modal="true">
       <p class="sheet-kicker">Jump to</p>
       <h2 id="switch-title" class="sheet-title">Switch game</h2>
-      <p class="sheet-copy">Names carry over. A live round stays parked, so you'll choose to carry on or start fresh.</p>
+      <p class="sheet-copy">${ONLINE.has(currentGameId)
+        ? 'Names carry over. Leaving Allegedly or Blend In drops you from that room, and you cannot carry it on.'
+        : 'Names carry over. A live round stays parked, so you will choose to carry on or start fresh.'}</p>
       <div class="switch-list">
         ${GAMES.map(g => {
           const parkedHere = parked.has(g.id) && g.id !== currentGameId;
@@ -283,10 +291,30 @@ function pauseCurrent() {
   }
 }
 
-function goHome() {
+function clearOnlineSession(gameId) {
+  if (gameId === 'hottakes') sessionStorage.removeItem(HOTTAKES_SESSION);
+  if (gameId === 'blendin') sessionStorage.removeItem(BLENDIN_SESSION);
+}
+
+async function dropOnline(gameId) {
+  if (!ONLINE.has(gameId)) return;
+  const inst = parked.get(gameId);
+  clearOnlineSession(gameId);
+  if (inst) {
+    try { await inst.leave?.(); } catch { /* session is already cleared */ }
+    inst.cleanup?.();
+    inst.root.remove();
+    parked.delete(gameId);
+  }
+  if (currentGameId === gameId) currentGameId = null;
+}
+
+async function goHome() {
+  const leaving = currentGameId;
   pendingParkedId = null;
   previousGameId = null;
-  pauseCurrent();
+  if (ONLINE.has(leaving)) await dropOnline(leaving);
+  else pauseCurrent();
   currentGameId = null;
   gameScreen.classList.remove('active');
   homeScreen.classList.add('active');
@@ -325,8 +353,7 @@ function startFresh(gameId) {
     existing.cleanup?.();
     existing.root.remove();
     parked.delete(gameId);
-    if (gameId === 'hottakes') sessionStorage.removeItem(HOTTAKES_SESSION);
-    if (gameId === 'blendin') sessionStorage.removeItem(BLENDIN_SESSION);
+    clearOnlineSession(gameId);
   }
   createFresh(gameId);
 }
@@ -341,7 +368,7 @@ function createFresh(gameId) {
   root.className = 'game-instance';
   gameScreen.appendChild(root);
 
-  const inst = { root, resume: null, cleanup: null };
+  const inst = { root, resume: null, cleanup: null, leave: null };
   parked.set(gameId, inst);
 
   const ctx = {
@@ -350,6 +377,7 @@ function createFresh(gameId) {
     roster,
     setResume(fn) { inst.resume = fn; },
     setCleanup(fn) { inst.cleanup = fn; },
+    setLeave(fn) { inst.leave = fn; },
   };
 
   switch (gameId) {
@@ -364,8 +392,9 @@ function createFresh(gameId) {
   }
 }
 
-function launchGame(gameId) {
+async function launchGame(gameId) {
   if (gameId === currentGameId) return;
+  if (ONLINE.has(currentGameId)) await dropOnline(currentGameId);
   if (gameId === 'install') {
     pauseCurrent();
     startFresh('install');

@@ -1526,6 +1526,21 @@ textarea:focus {
   background: var(--accent);
 }
 
+.player-pill.is-away {
+  opacity: 0.55;
+}
+
+.hold-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
+}
+
+.hold-actions .btn {
+  margin-top: 0;
+}
+
 .player-pill.is-you {
   background: var(--ink);
   color: var(--white);

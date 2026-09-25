@@ -1,4 +1,5 @@
 import { supabase, makeCode, makeId } from '../online/client.js';
+import { seated, present, leaveRoom, markAbsent, reclaimPlayer, castHoldVote, settleHold, holdMarkup, watchPresence, holdSql } from '../online/hold.js';
 import { HOT_TAKES_PROMPTS, ROUNDS_TO_PLAY } from '../data/hottakes-prompts.js';
 import { PFPS, pfpImg, pfpPicker } from '../data/pfps.js';
 
@@ -17,14 +18,16 @@ function escape(s) {
     .replace(/"/g, '&quot;');
 }
 
-export function createHotTakes(container, { ui, roster, setResume, setCleanup }) {
+export function createHotTakes(container, { ui, roster, setResume, setCleanup, setLeave }) {
   let me = { id: null, token: null, name: '', avatar: PFPS[0].id };
   let room = null;
   let players = [];
   let round = null;
   let answers = [];
   let votes = [];
+  let holdVotes = [];
   let draft = '';
+  let stopPresence = null;
   let error = '';
   let joining = false;
   let busy = false;
@@ -50,12 +53,16 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     return votes.find(v => v.voter_id === me.id);
   }
 
+  function inPlay() {
+    return seated(players);
+  }
+
   function othersWriting() {
-    return players.filter(p => !answers.some(a => a.player_id === p.id));
+    return inPlay().filter(p => !answers.some(a => a.player_id === p.id));
   }
 
   function othersVoting() {
-    return players.filter(p => !votes.some(v => v.voter_id === p.id));
+    return inPlay().filter(p => !votes.some(v => v.voter_id === p.id));
   }
 
   function totalRounds() {
@@ -111,6 +118,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     me = { id: player.id, token: saved.token, name: player.name, avatar: player.avatar || saved.avatar || PFPS[0].id };
     setup.avatar = me.avatar;
     room = found;
+    await supabase.from('players').update({ connected: true }).eq('id', me.id);
     await subscribe();
     await refresh();
     return true;
@@ -130,6 +138,13 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       ]);
       if (r) room = r;
       if (p) players = p;
+      if (room.status === 'holding') {
+        const { data: hv, error: hvErr } = await supabase.from('hold_votes').select('*').eq('room_id', room.id);
+        if (hvErr) error = holdSql(hvErr.message);
+        holdVotes = hv || [];
+      } else {
+        holdVotes = [];
+      }
       saveSession();
 
       if (room.round > 0) {
@@ -169,9 +184,19 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   }
 
   async function maybeAdvance() {
-    if (!room || players.length < 3) return;
+    if (!room) return;
+    if (room.status === 'holding') {
+      try {
+        const next = await settleHold(supabase, { room, players, votes: holdVotes });
+        if (next) room = next;
+      } catch (err) {
+        error = holdSql(err.message);
+      }
+      return;
+    }
+    if (inPlay().length < 3) return;
 
-    if (room.status === 'writing' && round && answers.length >= players.length) {
+    if (room.status === 'writing' && round && answers.length >= inPlay().length) {
       const { data } = await supabase
         .from('rooms')
         .update({ status: 'voting' })
@@ -183,7 +208,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       return;
     }
 
-    if (room.status === 'voting' && round && votes.length >= players.length) {
+    if (room.status === 'voting' && round && votes.length >= inPlay().length) {
       const tally = voteTally();
       const winners = roundWinners(tally);
       const lastRound = room.round >= totalRounds();
@@ -199,7 +224,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
 
       room = { ...room, status: nextStatus };
       for (const a of winners) {
-        const pl = players.find(p => p.id === a.player_id);
+        const pl = inPlay().find(p => p.id === a.player_id);
         if (!pl) continue;
         const nextScore = pl.score + 1;
         await supabase.from('players').update({ score: nextScore }).eq('id', pl.id);
@@ -217,7 +242,17 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'rounds', filter: `room_id=eq.${room.id}` }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'answers' }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, refresh)
-      .subscribe();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'hold_votes', filter: `room_id=eq.${room.id}` }, refresh);
+    stopPresence?.();
+    stopPresence = watchPresence(channel, {
+      meId: me.id,
+      getRoom: () => room,
+      getPlayers: () => players,
+      onAbsent: (playerId) => markAbsent(supabase, { room, playerId }),
+    });
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') await channel.track({ player_id: me.id });
+    });
   }
 
   async function hostRoom() {
@@ -294,12 +329,34 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
       return;
     }
     if (found.status !== 'lobby') {
-      joining = false;
-      error = found.status === 'finished'
-        ? 'That room already finished.'
-        : 'That room already started. Wait for the next lobby.';
-      render();
-      return;
+      if (found.status === 'finished') {
+        joining = false;
+        error = 'That room already finished.';
+        render();
+        return;
+      }
+      try {
+        const reclaimed = await reclaimPlayer(supabase, { room: found, name, avatar: setup.avatar });
+        if (!reclaimed) {
+          joining = false;
+          error = 'That room already started. Rejoin with the same name only if they are waiting for you.';
+          render();
+          return;
+        }
+        me = { id: reclaimed.id, token: reclaimed.token, name: reclaimed.name, avatar: reclaimed.avatar };
+        room = found;
+        roster.savePlayers([name, ...(roster.names || []).filter(n => n && n !== name)]);
+        joining = false;
+        saveSession();
+        await subscribe();
+        await refresh();
+        return;
+      } catch (err) {
+        joining = false;
+        error = holdSql(err.message);
+        render();
+        return;
+      }
     }
     me = { id: makeId(), token: makeId(), name, avatar: setup.avatar };
     const { error: pErr } = await supabase.from('players').insert({
@@ -341,10 +398,10 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   }
 
   async function startRound() {
-    if (!isHost() || players.length < 3 || busy) return;
+    if (!isHost() || inPlay().length < 3 || busy) return;
     busy = true;
     error = '';
-    const prompt = pickPrompt(players.map(p => p.name));
+    const prompt = pickPrompt(inPlay().map(p => p.name));
     const next = room.round + 1;
     const { error: rErr } = await supabase.from('rounds').insert({
       room_id: room.id,
@@ -398,8 +455,9 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   async function playAgain() {
     if (!isHost() || busy) return;
     busy = true;
-    await supabase.from('players').update({ score: 0 }).eq('room_id', room.id);
-    await supabase.from('rooms').update({ status: 'lobby', round: 0 }).eq('id', room.id);
+    await supabase.from('players').update({ score: 0, dropped: false, connected: true }).eq('room_id', room.id);
+    await supabase.from('hold_votes').delete().eq('room_id', room.id);
+    await supabase.from('rooms').update({ status: 'lobby', round: 0, resume_status: null }).eq('id', room.id);
     busy = false;
   }
 
@@ -410,6 +468,7 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     }
     switch (room.status) {
       case 'lobby': renderLobby(); break;
+      case 'holding': renderHolding(); break;
       case 'writing': renderWrite(); break;
       case 'voting': renderVote(); break;
       case 'results':
@@ -423,8 +482,27 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
     return `<div class="panel" style="background:var(--danger-bg)"><p>${escape(error)}</p></div>`;
   }
 
+  function renderHolding() {
+    container.innerHTML = `
+      ${ui.header('Allegedly')}
+      ${banner()}
+      ${holdMarkup({ players, votes: holdVotes, meId: me.id, escape, pfpImg })}
+    `;
+    container.querySelectorAll('[data-hold]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          await castHoldVote(supabase, { roomId: room.id, voterId: me.id, choice: btn.dataset.hold });
+          await refresh();
+        } catch (err) {
+          error = holdSql(err.message);
+          render();
+        }
+      });
+    });
+  }
+
   function scoreboard() {
-    const sorted = [...players].sort((a, b) => b.score - a.score);
+    const sorted = [...inPlay()].sort((a, b) => b.score - a.score);
     return `
       <div class="panel">
         <h2>${room.status === 'finished' ? 'Final scores' : `Scores · round ${room.round} of ${totalRounds()}`}</h2>
@@ -501,9 +579,9 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
         <p class="helper-text">Others open Sparkbox → Allegedly → type this code</p>
       </div>
       <div class="panel">
-        <h2>In the room · ${players.length}</h2>
+        <h2>In the room · ${present(players).length}</h2>
         <div class="player-pills">
-          ${players.map(p => `
+          ${present(players).map(p => `
             <span class="player-pill ${p.id === room.host_id ? 'is-host' : ''}${p.id === me.id ? ' is-you' : ''}">
               ${pfpImg(p.avatar, 'pfp--sm')}
               ${escape(p.name)}${p.id === me.id ? ' · you' : ''}
@@ -514,10 +592,10 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
           <label>Your face</label>
           ${pfpPicker(me.avatar || setup.avatar)}
         </div>
-        <p class="helper-text">${players.length < 3 ? 'Need at least 3 people to start.' : `${totalRounds()} rounds. Highest score at the end wins.`}</p>
+        <p class="helper-text">${present(players).length < 3 ? 'Need at least 3 people to start.' : `${totalRounds()} rounds. Highest score at the end wins.`}</p>
       </div>
       ${isHost()
-        ? `<button class="btn btn-primary" data-action="start" ${players.length < 3 ? 'disabled' : ''}>Start the game</button>`
+        ? `<button class="btn btn-primary" data-action="start" ${present(players).length < 3 ? 'disabled' : ''}>Start the game</button>`
         : `<p class="hint-text">Waiting for the host to start…</p>`}
     `;
     container.querySelector('[data-action="start"]')?.addEventListener('click', startRound);
@@ -620,7 +698,14 @@ export function createHotTakes(container, { ui, roster, setResume, setCleanup })
   }
 
   setResume?.(() => { if (room) refresh(); else render(); });
-  setCleanup?.(() => { if (channel) supabase.removeChannel(channel); });
+  setLeave?.(async () => {
+    sessionStorage.removeItem(HOTTAKES_SESSION);
+    await leaveRoom(supabase, { room, me, players });
+  });
+  setCleanup?.(() => {
+    stopPresence?.();
+    if (channel) supabase.removeChannel(channel);
+  });
 
   restoreSession().then(ok => { if (!ok) render(); });
 }

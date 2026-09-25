@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Sparkbox - Party Games</title>
+  <link rel="icon" href="images/favicon.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="images/favicon.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=15">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9172610701690985"
+    crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="bg-shapes" aria-hidden="true">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+    <div class="shape shape-5"></div>
+    <span class="float-emoji float-1">🎉</span>
+    <span class="float-emoji float-2">🎲</span>
+    <span class="float-emoji float-3">✨</span>
+    <span class="float-emoji float-4">🎭</span>
+    <span class="float-emoji float-5">❓</span>
+    <span class="float-emoji float-6">❔</span>
+    <span class="float-emoji float-7">❓</span>
+    <span class="float-emoji float-8">🔍</span>
+    <span class="float-emoji float-9">🔮</span>
+    <span class="float-emoji float-10">🗝️</span>
+    <span class="float-emoji float-11">👁️</span>
+    <span class="float-emoji float-12">🧩</span>
+    <span class="float-emoji float-13">❓</span>
+    <span class="float-emoji float-14">🕶️</span>
+    <span class="float-emoji float-15">❓</span>
+    <span class="float-emoji float-16">🕵️</span>
+    <span class="float-emoji float-17">❔</span>
+  </div>
+
+  <div id="app">
+    <section id="screen-home" class="screen active">
+      <header class="home-topbar">
+        <h1 class="wordmark">
+          <img src="images/logo.png" alt="sparkbox" class="wordmark-logo wordmark-logo--compact" width="120" height="75">
+        </h1>
+      </header>
+
+      <p class="section-label">Connect together</p>
+      <div class="phone-grid">
+        <button class="poster" type="button" data-game="hottakes">
+          <span class="poster-kicker">On your phones</span>
+          <span class="poster-icon">🔥</span>
+          <span class="poster-name">Allegedly</span>
+          <span class="poster-desc">A prompt about someone. Secret answers. Vote the funniest or most true.</span>
+          <span class="game-meta">Easy · 15–25 min · 3–8</span>
+          <span class="poster-go">Open →</span>
+        </button>
+
+        <button class="poster poster--blend" type="button" data-game="blendin">
+          <span class="poster-kicker">On your phones</span>
+          <span class="poster-icon">🦎</span>
+          <span class="poster-name">Blend In</span>
+          <span class="poster-desc">Same prompt, except one. Pick who it fits. Catch the odd one out.</span>
+          <span class="game-meta">Easy · 15–25 min · 3–8</span>
+          <span class="poster-go">Open →</span>
+        </button>
+      </div>
+
+      <p class="section-label section-label--follow">Pass and play</p>
+      <div class="tile-grid">
+        <button class="tile tile--spy" type="button" data-game="spyplay">
+          <span class="tile-icon">🕵️</span>
+          <span class="tile-name">Incognito</span>
+          <span class="tile-desc">Ask questions. Find the spy who doesn’t know the location.</span>
+          <span class="game-meta">Easy · 10 min · 4–8</span>
+        </button>
+        <button class="tile tile--mafia" type="button" data-game="mafia">
+          <span class="tile-icon">🌙</span>
+          <span class="tile-name">Mafia</span>
+          <span class="tile-desc">Town vs mafia. Lie, vote, and survive the night.</span>
+          <span class="game-meta">Medium · 20–30 min · 6–10</span>
+        </button>
+        <button class="tile tile--impostor" type="button" data-game="impostor">
+          <span class="tile-icon">🎭</span>
+          <span class="tile-name">Impostor</span>
+          <span class="tile-desc">One word each turn. Spot who doesn’t know the word.</span>
+          <span class="game-meta">Easy · 10 min · 4–8</span>
+        </button>
+        <button class="tile tile--callit" type="button" data-game="callit">
+          <span class="tile-icon">⚡</span>
+          <span class="tile-name">Call It</span>
+          <span class="tile-desc">Two teams bid, then name that many under the clock.</span>
+          <span class="game-meta">Easy · 10–15 min · 2 teams</span>
+        </button>
+        <button class="tile tile--wave" type="button" data-game="wavelength">
+          <span class="tile-icon">📡</span>
+          <span class="tile-name">Read the Room</span>
+          <span class="tile-desc">One sits out. Guess the number from three answers.</span>
+          <span class="game-meta">Easy · 10 min · 4–8</span>
+        </button>
+        <button class="tile tile--install" type="button" data-game="install">
+          <span class="tile-icon">📲</span>
+          <span class="tile-name">Add to home</span>
+          <span class="tile-desc">Save Sparkbox on your phone. iOS app coming soon.</span>
+          <span class="game-meta">30 sec · any phone</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="screen-game" class="screen"></section>
+  </div>
+
+  <div id="modal-root" class="modal-root" hidden></div>
+
+  <script type="module" src="js/app.js?v=15"></script>
+</body>
+</html>

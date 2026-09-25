@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Sparkbox - layout labs</title>
+  <link rel="icon" href="images/favicon.jpg" type="image/jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/layout-labs.css?v=2">
+</head>
+<body>
+  <p class="labs-note">Preview only. The live site is unchanged. Pick a layout.</p>
+
+  <nav class="labs-nav" aria-label="Layout options">
+    <button type="button" class="labs-tab is-on" data-show="poster">Poster</button>
+    <button type="button" class="labs-tab" data-show="tiles">Tiles</button>
+    <button type="button" class="labs-tab" data-show="shelves">Shelves</button>
+    <button type="button" class="labs-tab" data-show="rows">Rows</button>
+  </nav>
+
+  <!-- 1. Poster: one featured game, compact grid under it -->
+  <section class="lab lab--poster is-on" id="poster">
+    <header class="topbar">
+      <img src="images/logo.png" alt="sparkbox" class="topbar-logo" width="120" height="75">
+    </header>
+    <button type="button" class="poster">
+      <span class="poster-kicker">Play on your phones</span>
+      <span class="poster-icon">🔥</span>
+      <span class="poster-name">Allegedly</span>
+      <span class="poster-desc">A prompt about someone in the room. Write the funniest or most true answer. Vote the best.</span>
+      <span class="meta">Easy · 15–25 min · 3–8 phones</span>
+      <span class="poster-go">Open →</span>
+    </button>
+    <p class="shelf-label">Pass the device</p>
+    <div class="tile-grid">
+      <button type="button" class="tile tile--spy">
+        <span class="tile-icon">🕵️</span>
+        <span class="tile-name">Incognito</span>
+        <span class="tile-desc">Ask questions. Find the spy who doesn’t know the location.</span>
+        <span class="meta">Easy · 10 min · 4–8</span>
+      </button>
+      <button type="button" class="tile tile--mafia">
+        <span class="tile-icon">🌙</span>
+        <span class="tile-name">Mafia</span>
+        <span class="tile-desc">Town vs mafia. Lie, vote, and survive the night.</span>
+        <span class="meta">Medium · 20–30 min · 6–10</span>
+      </button>
+      <button type="button" class="tile tile--impostor">
+        <span class="tile-icon">🎭</span>
+        <span class="tile-name">Impostor</span>
+        <span class="tile-desc">One word each turn. Spot who doesn’t know the word.</span>
+        <span class="meta">Easy · 10 min · 4–8</span>
+      </button>
+      <button type="button" class="tile tile--callit">
+        <span class="tile-icon">⚡</span>
+        <span class="tile-name">Call It</span>
+        <span class="tile-desc">Two teams bid, then name that many under the clock.</span>
+        <span class="meta">Easy · 10–15 min · 2 teams</span>
+      </button>
+      <button type="button" class="tile tile--wave">
+        <span class="tile-icon">📡</span>
+        <span class="tile-name">Read the Room</span>
+        <span class="tile-desc">One sits out. Guess the number from three answers.</span>
+        <span class="meta">Easy · 10 min · 4–8</span>
+      </button>
+      <button type="button" class="tile tile--install">
+        <span class="tile-icon">📲</span>
+        <span class="tile-name">Add to home</span>
+        <span class="tile-desc">Save Sparkbox on your phone. iOS app coming soon.</span>
+        <span class="meta">30 sec · any phone</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- 2. Tiles: equal 2-up squares, tiny header -->
+  <section class="lab lab--tiles" id="tiles">
+    <header class="hero-mini">
+      <img src="images/logo.png" alt="sparkbox" class="hero-mini-logo" width="160" height="100">
+      <p>Pick a game. Pass the phone, or open Allegedly on yours.</p>
+    </header>
+    <div class="square-grid">
+      <button type="button" class="square square--wide square--hot">
+        <span class="square-icon">🔥</span>
+        <span class="square-name">Allegedly</span>
+        <span class="square-desc">A prompt about someone. Secret answers. Vote the funniest or most true.</span>
+        <span class="meta">Easy · 15–25 min · 3–8 phones</span>
+      </button>
+      <button type="button" class="square square--spy">
+        <span class="square-icon">🕵️</span>
+        <span class="square-name">Incognito</span>
+        <span class="square-desc">Ask questions. Find the spy.</span>
+        <span class="meta">Easy · 10 min · 4–8</span>
+      </button>
+      <button type="button" class="square square--mafia">
+        <span class="square-icon">🌙</span>
+        <span class="square-name">Mafia</span>
+        <span class="square-desc">Lie, bluff, survive the night.</span>
+        <span class="meta">Medium · 20–30 min · 6–10</span>
+      </button>
+      <button type="button" class="square square--impostor">
+        <span class="square-icon">🎭</span>
+        <span class="square-name">Impostor</span>
+        <span class="square-desc">One word a turn. Spot the fake.</span>
+        <span class="meta">Easy · 10 min · 4–8</span>
+      </button>
+      <button type="button" class="square square--callit">
+        <span class="square-icon">⚡</span>
+        <span class="square-name">Call It</span>
+        <span class="square-desc">Bid, call it, name them fast.</span>
+        <span class="meta">Easy · 10–15 min · 2 teams</span>
+      </button>
+      <button type="button" class="square square--wave">
+        <span class="square-icon">📡</span>
+        <span class="square-name">Read the Room</span>
+        <span class="square-desc">Guess the number from three answers.</span>
+        <span class="meta">Easy · 10 min · 4–8</span>
+      </button>
+      <button type="button" class="square square--install">
+        <span class="square-icon">📲</span>
+        <span class="square-name">Add to home</span>
+        <span class="square-desc">Save Sparkbox on your phone.</span>
+        <span class="meta">30 sec · any phone</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- 3. Shelves: two modes, horizontal scroller + stacked -->
+  <section class="lab lab--shelves" id="shelves">
+    <header class="hero-mini">
+      <img src="images/logo.png" alt="sparkbox" class="hero-mini-logo" width="160" height="100">
+    </header>
+    <p class="shelf-label">On your phones</p>
+    <button type="button" class="shelf-hero">
+      <span class="shelf-hero-icon">🔥</span>
+      <span class="shelf-hero-copy">
+        <strong>Allegedly</strong>
+        Write the rumour. Vote the one that sounds like them.
+      </span>
+    </button>
+    <p class="shelf-label">One device</p>
+    <div class="rail" tabindex="0">
+      <button type="button" class="rail-card rail--spy"><span>🕵️</span><b>Incognito</b><i>Find the spy</i></button>
+      <button type="button" class="rail-card rail--mafia"><span>🌙</span><b>Mafia</b><i>Survive the night</i></button>
+      <button type="button" class="rail-card rail--impostor"><span>🎭</span><b>Impostor</b><i>Spot the fake</i></button>
+      <button type="button" class="rail-card rail--callit"><span>⚡</span><b>Call It</b><i>Bid and name</i></button>
+      <button type="button" class="rail-card rail--wave"><span>📡</span><b>Read the Room</b><i>Guess the number</i></button>
+    </div>
+    <button type="button" class="quiet-link">Add Sparkbox to your home screen</button>
+  </section>
+
+  <!-- 4. Rows: tight list, colour blocks, no fat cards -->
+  <section class="lab lab--rows" id="rows">
+    <header class="topbar topbar--split">
+      <img src="images/logo.png" alt="sparkbox" class="topbar-logo" width="110" height="69">
+      <span class="topbar-tag">Tonight</span>
+    </header>
+    <ul class="row-list">
+      <li>
+        <button type="button" class="row row--hot">
+          <span class="row-swatch"></span>
+          <span class="row-icon">🔥</span>
+          <span class="row-copy"><b>Allegedly</b><i>Phones · funniest or most true</i></span>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="row row--spy">
+          <span class="row-swatch"></span>
+          <span class="row-icon">🕵️</span>
+          <span class="row-copy"><b>Incognito</b><i>Who’s the spy?</i></span>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="row row--mafia">
+          <span class="row-swatch"></span>
+          <span class="row-icon">🌙</span>
+          <span class="row-copy"><b>Mafia</b><i>Lie, bluff, survive</i></span>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="row row--impostor">
+          <span class="row-swatch"></span>
+          <span class="row-icon">🎭</span>
+          <span class="row-copy"><b>Impostor</b><i>One word each turn</i></span>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="row row--callit">
+          <span class="row-swatch"></span>
+          <span class="row-icon">⚡</span>
+          <span class="row-copy"><b>Call It</b><i>Bid, then name them</i></span>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="row row--wave">
+          <span class="row-swatch"></span>
+          <span class="row-icon">📡</span>
+          <span class="row-copy"><b>Read the Room</b><i>Guess the shared number</i></span>
+        </button>
+      </li>
+    </ul>
+    <button type="button" class="quiet-link">Add to home screen</button>
+  </section>
+
+  <script>
+    const tabs = document.querySelectorAll('.labs-tab');
+    const labs = document.querySelectorAll('.lab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.toggle('is-on', t === tab));
+        labs.forEach(lab => lab.classList.toggle('is-on', lab.id === tab.dataset.show));
+        window.scrollTo(0, 0);
+      });
+    });
+  </script>
+</body>
+</html>
